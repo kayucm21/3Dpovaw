@@ -403,6 +403,71 @@ async function sendDiscordWebhook(url, payload) {
   }
 }
 
+async function sendDeviceBlockedWebhook(device, hwid, blockedAt) {
+  const config = loadConfig();
+  if (!config.discordEnabled || !config.discordWebhookUrl) return;
+  
+  const nowMsk = formatMoscowTime(new Date());
+  
+  const payload = {
+    embeds: [{
+      title: '🚫 Устройство заблокировано',
+      color: 15158332, // Красный цвет
+      thumbnail: {
+        url: 'https://i.imgur.com/7QxKZyP.png'
+      },
+      fields: [
+        {
+          name: '👤 Пользователь',
+          value: `\`${device.username || 'Неизвестно'}\``,
+          inline: true
+        },
+        {
+          name: '📱 Устройство',
+          value: `\`${device.device || 'Неизвестно'}\``,
+          inline: true
+        },
+        {
+          name: '🔑 HWID (Серийный номер)',
+          value: `\`${hwid}\``,
+          inline: false
+        },
+        {
+          name: '🌍 IP адрес',
+          value: `\`${device.ip || 'Неизвестно'}\``,
+          inline: true
+        },
+        {
+          name: '📊 Платформа',
+          value: `\`${device.device || 'Неизвестно'}\``,
+          inline: true
+        },
+        {
+          name: '🕐 Время блокировки (МСК)',
+          value: `\`${nowMsk}\``,
+          inline: false
+        },
+        {
+          name: '🔒 Протокол',
+          value: `\`${device.protocol?.toUpperCase() || 'НЕИЗВЕСТНО'}\``,
+          inline: true
+        },
+        {
+          name: '⏰ Первое подключение',
+          value: `\`${formatMoscowTime(device.firstSeen)}\``,
+          inline: true
+        }
+      ],
+      footer: {
+        text: 'NaiveProxy Panel - Глобальное обновление v2.0'
+      },
+      timestamp: new Date().toISOString()
+    }]
+  };
+
+  await sendDiscordWebhook(config.discordWebhookUrl, payload);
+}
+
 function restartDiscordMonitor() {
   if (discordMonitorTimer) {
     clearInterval(discordMonitorTimer);
@@ -707,7 +772,7 @@ app.get('/api/devices', requireAuth, (req, res) => {
   res.json({ devices: devices.devices || [] });
 });
 
-app.post('/api/devices/block', requireAuth, (req, res) => {
+app.post('/api/devices/block', requireAuth, async (req, res) => {
   const { hwid } = req.body;
   if (!hwid) {
     return res.json({ success: false, message: 'HWID обязателен' });
@@ -719,8 +784,12 @@ app.post('/api/devices/block', requireAuth, (req, res) => {
     return res.json({ success: false, message: 'Устройство не найдено' });
   }
   
+  // Отправляем уведомление в Discord ДО блокировки
+  const blockedAt = new Date().toISOString();
+  await sendDeviceBlockedWebhook(device, hwid, blockedAt);
+  
   device.blocked = true;
-  device.blockedAt = new Date().toISOString();
+  device.blockedAt = blockedAt;
   saveDevices(devices);
   
   res.json({ success: true, message: `Устройство ${device.username} заблокировано` });

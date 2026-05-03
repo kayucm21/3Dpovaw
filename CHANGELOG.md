@@ -1,5 +1,17 @@
 # CHANGELOG
 
+## 2026-05-03 13:49:15 UTC - 9174f581
+
+- Author: Koda AI
+- Message: feat: Discord уведомления о блокировке устройств
+- Commit: https://github.com/kayucm21/3Dpovaw/commit/9174f58147b87a2a6ae5a56ba6abfac69be1fc2b
+
+### Changed files
+
+- `README.md`
+- `panel/server/index.js`
+
+
 ## 2024-XX-XX - Глобальное обновление v2.0 - Мониторинг устройств и расширенные логи
 
 ### ✨ Новые функции

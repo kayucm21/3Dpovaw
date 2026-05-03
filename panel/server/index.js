@@ -18,6 +18,8 @@ const wss = new WebSocket.Server({ server });
 const PORT = process.env.PORT || 3000;
 const DATA_FILE = path.join(__dirname, '../data/config.json');
 const USERS_FILE = path.join(__dirname, '../data/users.json');
+const DEVICES_FILE = path.join(__dirname, '../data/devices.json');
+const CONNECTIONS_LOG_FILE = path.join(__dirname, '../data/connections-log.json');
 let discordMonitorTimer = null;
 let lastDiscordServiceState = null;
 const oneTimeQrTokens = new Map();
@@ -192,6 +194,12 @@ function formatMoscowTime(dateInput) {
   }
 }
 
+function generateDeviceId(userAgent, ip) {
+  const hash = crypto.createHash('sha256');
+  hash.update(`${userAgent || ''}-${ip || ''}-${Date.now()}`);
+  return hash.digest('hex').slice(0, 16);
+}
+
 function parseDeviceFromUA(ua) {
   if (!ua) return 'Неизвестно';
   const v = ua.toLowerCase();
@@ -215,6 +223,91 @@ function tryDecodeBasicUser(authHeader) {
   }
 }
 
+function loadDevices() {
+  if (!fs.existsSync(DEVICES_FILE)) {
+    const defaultDevices = { devices: [] };
+    try { fs.writeFileSync(DEVICES_FILE, JSON.stringify(defaultDevices, null, 2)); } catch {}
+    return defaultDevices;
+  }
+  try {
+    return JSON.parse(fs.readFileSync(DEVICES_FILE, 'utf8'));
+  } catch {
+    return { devices: [] };
+  }
+}
+
+function saveDevices(devices) {
+  try { fs.writeFileSync(DEVICES_FILE, JSON.stringify(devices, null, 2)); } catch {}
+}
+
+function logConnection(username, protocol, ip, userAgent, deviceInfo) {
+  const logEntry = {
+    timestamp: new Date().toISOString(),
+    username,
+    protocol,
+    ip,
+    userAgent,
+    device: deviceInfo.device || 'Неизвестно',
+    hwid: deviceInfo.hwid || generateDeviceId(userAgent, ip),
+    blocked: false
+  };
+
+  // Load existing logs
+  let logs = [];
+  if (fs.existsSync(CONNECTIONS_LOG_FILE)) {
+    try {
+      logs = JSON.parse(fs.readFileSync(CONNECTIONS_LOG_FILE, 'utf8'));
+    } catch {
+      logs = [];
+    }
+  }
+
+  // Check if device is blocked
+  const devices = loadDevices();
+  const existingDevice = devices.devices.find(d => d.hwid === logEntry.hwid);
+  if (existingDevice && existingDevice.blocked) {
+    logEntry.blocked = true;
+  }
+
+  // Add new entry
+  logs.unshift(logEntry);
+
+  // Keep only last 1000 entries
+  if (logs.length > 1000) {
+    logs = logs.slice(0, 1000);
+  }
+
+  try { fs.writeFileSync(CONNECTIONS_LOG_FILE, JSON.stringify(logs, null, 2)); } catch {}
+
+  // Update devices list
+  if (!existingDevice) {
+    devices.devices.push({
+      hwid: logEntry.hwid,
+      username,
+      device: deviceInfo.device,
+      ip,
+      userAgent,
+      firstSeen: logEntry.timestamp,
+      lastSeen: logEntry.timestamp,
+      blocked: false,
+      protocol
+    });
+    saveDevices(devices);
+  } else {
+    existingDevice.lastSeen = logEntry.timestamp;
+    existingDevice.ip = ip;
+    saveDevices(devices);
+  }
+  
+  return logEntry;
+}
+
+function checkDeviceBlocked(hwid) {
+  const devices = loadDevices();
+  const device = devices.devices.find(d => d.hwid === hwid);
+  return device ? device.blocked : false;
+}
+
 function parseCaddyConnections(logPath) {
   if (!fs.existsSync(logPath)) return [];
   const lines = fs.readFileSync(logPath, 'utf8').split('\n').filter(Boolean);
@@ -228,14 +321,19 @@ function parseCaddyConnections(logPath) {
       const ua = Array.isArray(headers['User-Agent']) ? headers['User-Agent'][0] : headers['User-Agent'];
       const proxyAuth = Array.isArray(headers['Proxy-Authorization']) ? headers['Proxy-Authorization'][0] : headers['Proxy-Authorization'];
       const user = tryDecodeBasicUser(proxyAuth);
+      const deviceInfo = {
+        device: parseDeviceFromUA(ua),
+        hwid: generateDeviceId(ua, req.remote_ip || item.remote_ip)
+      };
       out.push({
         time: formatMoscowTime(item.ts ? new Date(item.ts * 1000) : new Date()),
         protocol: 'naive',
         username: user || 'unknown',
         ip: req.remote_ip || item.remote_ip || '—',
         userAgent: ua || '—',
-        device: parseDeviceFromUA(ua),
-        hwid: 'Недоступно'
+        device: deviceInfo.device,
+        hwid: deviceInfo.hwid,
+        blocked: checkDeviceBlocked(deviceInfo.hwid)
       });
     } catch {
       // skip bad line
@@ -243,7 +341,7 @@ function parseCaddyConnections(logPath) {
   }
   return out;
 }
-
+  
 function parseXrayConnections(logPath) {
   if (!fs.existsSync(logPath)) return [];
   const lines = fs.readFileSync(logPath, 'utf8').split('\n').filter(Boolean);
@@ -254,6 +352,7 @@ function parseXrayConnections(logPath) {
     if (!ipMatch) continue;
     const emailMatch = line.match(/email:([^\s]+)/i);
     const timeMatch = line.match(/^(\d{4}\/\d{2}\/\d{2}\s+\d{2}:\d{2}:\d{2})/);
+    const hwid = generateDeviceId(emailMatch ? emailMatch[1] : '', ipMatch[1]);
     out.push({
       time: formatMoscowTime(timeMatch ? timeMatch[1].replace(/\//g, '-') : new Date()),
       protocol: 'vless',
@@ -261,7 +360,8 @@ function parseXrayConnections(logPath) {
       ip: ipMatch[1],
       userAgent: '—',
       device: 'Неизвестно',
-      hwid: 'Недоступно'
+      hwid,
+      blocked: checkDeviceBlocked(hwid)
     });
   }
   return out;
@@ -339,7 +439,7 @@ function restartDiscordMonitor() {
     });
   }, intervalSec * 1000);
 }
-
+  
 function loadUsers() {
   if (!fs.existsSync(USERS_FILE)) {
     const defaultUsers = {
@@ -579,7 +679,84 @@ app.delete('/api/proxy-users/:username', requireAuth, (req, res) => {
 });
 
 app.get('/api/connections', requireAuth, (req, res) => {
-  res.json({ connections: collectConnections() });
+  let connections = collectConnections();
+  
+  // Also load from persistent log
+  if (fs.existsSync(CONNECTIONS_LOG_FILE)) {
+    try {
+      const logs = JSON.parse(fs.readFileSync(CONNECTIONS_LOG_FILE, 'utf8'));
+      connections = [...logs.slice(0, 200), ...connections];
+      // Remove duplicates
+      const unique = new Map();
+      connections.forEach(c => {
+        if (c.hwid && !unique.has(c.hwid)) {
+          unique.set(c.hwid, c);
+        }
+      });
+      connections = Array.from(unique.values());
+    } catch {
+      // ignore
+    }
+  }
+  
+  res.json({ connections });
+});
+
+app.get('/api/devices', requireAuth, (req, res) => {
+  const devices = loadDevices();
+  res.json({ devices: devices.devices || [] });
+});
+
+app.post('/api/devices/block', requireAuth, (req, res) => {
+  const { hwid } = req.body;
+  if (!hwid) {
+    return res.json({ success: false, message: 'HWID обязателен' });
+  }
+  
+  const devices = loadDevices();
+  const device = devices.devices.find(d => d.hwid === hwid);
+  if (!device) {
+    return res.json({ success: false, message: 'Устройство не найдено' });
+  }
+  
+  device.blocked = true;
+  device.blockedAt = new Date().toISOString();
+  saveDevices(devices);
+  
+  res.json({ success: true, message: `Устройство ${device.username} заблокировано` });
+});
+
+app.post('/api/devices/unblock', requireAuth, (req, res) => {
+  const { hwid } = req.body;
+  if (!hwid) {
+    return res.json({ success: false, message: 'HWID обязателен' });
+  }
+  
+  const devices = loadDevices();
+  const device = devices.devices.find(d => d.hwid === hwid);
+  if (!device) {
+    return res.json({ success: false, message: 'Устройство не найдено' });
+  }
+  
+  device.blocked = false;
+  delete device.blockedAt;
+  saveDevices(devices);
+  
+  res.json({ success: true, message: `Устройство ${device.username} разблокировано` });
+});
+
+app.get('/api/logs', requireAuth, (req, res) => {
+  if (!fs.existsSync(CONNECTIONS_LOG_FILE)) {
+    return res.json({ logs: [] });
+  }
+  
+  try {
+    const logs = JSON.parse(fs.readFileSync(CONNECTIONS_LOG_FILE, 'utf8'));
+    const limit = Math.min(500, logs.length);
+    res.json({ logs: logs.slice(0, limit) });
+  } catch {
+    res.json({ logs: [] });
+  }
 });
 
 app.post('/api/vless/one-time-qr', requireAuth, (req, res) => {
@@ -640,7 +817,7 @@ app.get('/api/status', requireAuth, (req, res) => {
     });
   });
 });
-
+  
 app.post('/api/update/run', requireAuth, async (req, res) => {
   const cmd = [
     'cd /opt/naiveproxy-panel',

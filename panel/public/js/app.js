@@ -155,6 +155,8 @@ function goToPage(page) {
 
   if (page === 'dashboard') loadDashboard();
   if (page === 'users') loadUsers();
+  if (page === 'devices') loadDevicesPage();
+  if (page === 'logs') loadLogsPage();
   if (page === 'connections') loadConnections();
   if (page === 'settings') loadSettingsPage();
 }
@@ -1196,4 +1198,140 @@ function escapeHtml(str) {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
+}
+
+// ─── DEVICES PAGE ────────────────────────────────────
+async function loadDevicesPage() {
+  const table = document.getElementById('devicesTable');
+  const tbody = document.getElementById('devicesTableBody');
+  const empty = document.getElementById('emptyDevices');
+  
+  if (!table || !tbody || !empty) return;
+  
+  try {
+    const res = await fetch('/api/devices');
+    const data = await res.json();
+    const list = data.devices || [];
+    
+    if (list.length === 0) {
+      table.style.display = 'none';
+      empty.style.display = 'flex';
+      return;
+    }
+    
+    table.style.display = 'table';
+    empty.style.display = 'none';
+    tbody.innerHTML = '';
+    
+    list.forEach((item) => {
+      const platformClass = item.device ? item.device.toLowerCase().replace(/\s+/g, '') : '';
+      const blockedBadge = item.blocked ? '<span class="badge" style="background:rgba(239,68,68,0.15);color:#fca5a5;border-color:rgba(239,68,68,0.3)">ЗАБЛОКИРОВАН</span>' : '<span class="badge">Активен</span>';
+      
+      tbody.innerHTML += `
+        <tr>
+          <td>${escapeHtml(item.username || '—')}</td>
+          <td>${escapeHtml(item.device || 'Неизвестно')}</td>
+          <td class="td-pwd" style="font-size:0.75rem;">${escapeHtml(item.hwid || '—')}</td>
+          <td class="td-pwd">${escapeHtml(item.ip || '—')}</td>
+          <td><span class="client-platform ${platformClass}">${escapeHtml(item.device || '—')}</span></td>
+          <td>${item.lastSeen ? new Date(item.lastSeen).toLocaleString('ru') : '—'}</td>
+          <td>${blockedBadge}</td>
+          <td>
+            ${item.blocked ? 
+              `<button class="btn btn-success btn-sm" onclick="unblockDevice('${escapeHtml(item.hwid)}')" title="Разблокировать">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 11V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5"/><path d="M15 11l3 3-3 3"/><path d="M21 14H9"/></svg>
+              </button>` : 
+              `<button class="btn btn-danger btn-sm" onclick="blockDevice('${escapeHtml(item.hwid)}')" title="Заблокировать">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              </button>`
+            }
+          </td>
+        </tr>`;
+    });
+  } catch (err) {
+    showToast('Ошибка загрузки устройств', 'error');
+  }
+}
+
+async function blockDevice(hwid) {
+  try {
+    const res = await fetch('/api/devices/block', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ hwid })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast(data.message, 'success');
+      loadDevicesPage();
+    } else {
+      showToast(data.message || 'Ошибка блокировки', 'error');
+    }
+  } catch {
+    showToast('Ошибка соединения', 'error');
+  }
+}
+
+async function unblockDevice(hwid) {
+  try {
+    const res = await fetch('/api/devices/unblock', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ hwid })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast(data.message, 'success');
+      loadDevicesPage();
+    } else {
+      showToast(data.message || 'Ошибка разблокировки', 'error');
+    }
+  } catch {
+    showToast('Ошибка соединения', 'error');
+  }
+}
+
+// ─── LOGS PAGE ────────────────────────────────────
+async function loadLogsPage() {
+  const terminal = document.getElementById('logsTerminal');
+  const empty = document.getElementById('emptyLogs');
+  
+  if (!terminal) return;
+  
+  try {
+    const res = await fetch('/api/logs');
+    const data = await res.json();
+    const list = data.logs || [];
+    
+    if (list.length === 0) {
+      terminal.innerHTML = '';
+      if (empty) empty.style.display = 'flex';
+      return;
+    }
+    
+    if (empty) empty.style.display = 'none';
+    
+    terminal.innerHTML = '';
+    
+    list.forEach((item) => {
+      const blockedClass = item.blocked ? 'log-warn' : 'log-info';
+      const blockedIcon = item.blocked ? '🚫 ' : '📡 ';
+      const statusText = item.blocked ? '(ЗАБЛОКИРОВАНО)' : '(активно)';
+      
+      const line = document.createElement('div');
+      line.className = `log-line ${blockedClass}`;
+      line.innerHTML = `
+        <span style="opacity:0.6">${item.time ? new Date(item.time).toLocaleString('ru') : '—'}</span> | 
+        <span style="color:${item.blocked ? '#fca5a5' : '#8ba8c8'}">${blockedIcon}${escapeHtml(item.username || 'unknown')} ${statusText}</span> | 
+        IP: <span style="color:#34d399">${escapeHtml(item.ip || '—')}</span> | 
+        HWID: <span style="font-family:monospace;font-size:11px">${escapeHtml(item.hwid || '—')}</span> | 
+        Устройство: ${escapeHtml(item.device || '—')}
+      `;
+      terminal.appendChild(line);
+    });
+    
+    terminal.scrollTop = terminal.scrollHeight;
+  } catch (err) {
+    showToast('Ошибка загрузки логов', 'error');
+  }
 }

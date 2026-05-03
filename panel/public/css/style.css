@@ -603,9 +603,12 @@ body {
   letter-spacing: 0.3px;
   text-transform: uppercase;
 }
-.client-platform.ios    { background: rgba(0,122,255,0.15); color: #60a5fa; border: 1px solid rgba(0,122,255,0.25); }
+.client-platform.ios, .client-platform.iphone, .client-platform.ipad, .client-platform.iphone/ipos { background: rgba(0,122,255,0.15); color: #60a5fa; border: 1px solid rgba(0,122,255,0.25); }
 .client-platform.android { background: rgba(61,220,132,0.12); color: #34d399; border: 1px solid rgba(61,220,132,0.25); }
 .client-platform.windows { background: rgba(0,120,215,0.12); color: #93c5fd; border: 1px solid rgba(0,120,215,0.25); }
+.client-platform.macos, .client-platform.macintosh { background: rgba(100,100,100,0.15); color: #d1d5db; border: 1px solid rgba(100,100,100,0.25); }
+.client-platform.linux { background: rgba(240,147,43,0.12); color: #fbbf24; border: 1px solid rgba(240,147,43,0.25); }
+.client-platform.unknown, .client-platform.неизвестно { background: rgba(156,163,175,0.12); color: #9ca3af; border: 1px solid rgba(156,163,175,0.25); }
 .client-name { flex: 1; font-size: 0.88rem; font-weight: 500; color: var(--text-primary); }
 .client-link {
   color: var(--text-accent);

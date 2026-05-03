@@ -1,0 +1,82 @@
+name: Auto Changelog
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - "CHANGELOG.md"
+
+permissions:
+  contents: write
+
+jobs:
+  update-changelog:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Build changelog entry
+        shell: bash
+        run: |
+          NOW_UTC="$(date -u +"%Y-%m-%d %H:%M:%S UTC")"
+          COMMIT_SHA="${GITHUB_SHA}"
+          SHORT_SHA="${COMMIT_SHA:0:8}"
+          AUTHOR="$(git log -1 --pretty=%an)"
+          SUBJECT="$(git log -1 --pretty=%s)"
+
+          if git rev-parse "${COMMIT_SHA}~1" >/dev/null 2>&1; then
+            CHANGED_FILES="$(git diff --name-only "${COMMIT_SHA}~1" "${COMMIT_SHA}")"
+          else
+            CHANGED_FILES="$(git ls-tree --name-only -r "${COMMIT_SHA}")"
+          fi
+
+          {
+            echo "## ${NOW_UTC} - ${SHORT_SHA}"
+            echo ""
+            echo "- Author: ${AUTHOR}"
+            echo "- Message: ${SUBJECT}"
+            echo "- Commit: https://github.com/${GITHUB_REPOSITORY}/commit/${COMMIT_SHA}"
+            echo ""
+            echo "### Changed files"
+            echo ""
+            while IFS= read -r file; do
+              if [ -n "$file" ]; then
+                echo "- \`${file}\`"
+              fi
+            done <<< "${CHANGED_FILES}"
+            echo ""
+          } > /tmp/changelog_entry.md
+
+          if [ -f CHANGELOG.md ]; then
+            cp CHANGELOG.md /tmp/changelog_old.md
+          else
+            echo "# CHANGELOG" > /tmp/changelog_old.md
+            echo "" >> /tmp/changelog_old.md
+          fi
+
+          {
+            head -n 1 /tmp/changelog_old.md
+            echo ""
+            cat /tmp/changelog_entry.md
+            tail -n +2 /tmp/changelog_old.md
+          } > CHANGELOG.md
+
+      - name: Commit changelog
+        shell: bash
+        run: |
+          if git diff --quiet -- CHANGELOG.md; then
+            echo "No changelog updates"
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add CHANGELOG.md
+          git commit -m "chore: update changelog [skip ci]"
+          git push
+

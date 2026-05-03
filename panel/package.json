@@ -1,7 +1,7 @@
-{
+﻿{
   "name": "naive-proxy-panel",
-  "version": "1.0.0",
-  "description": "Panel NaiveProxy by RIXXX — управление NaiveProxy через веб-интерфейс",
+  "version": "3.0.0",
+  "description": "Panel NaiveProxy v3.0 — современное управление NaiveProxy и VLESS через веб-интерфейс",
   "main": "server/index.js",
   "scripts": {
     "start": "node server/index.js",
@@ -16,6 +16,8 @@
     "ws": "^8.14.2",
     "cors": "^2.8.5",
     "body-parser": "^1.20.2",
-    "fs-extra": "^11.1.1"
+    "fs-extra": "^11.1.1",
+    "speakeasy": "^2.0.0",
+    "qrcode": "^1.5.3"
   }
 }

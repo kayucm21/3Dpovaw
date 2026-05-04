@@ -90,6 +90,11 @@
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
         <span>Логи</span>
       </a>
+      <a href="#" class="nav-item" data-page="sni">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        <span>SNI Whitelist</span>
+        <span class="notification-badge" id="sniBadge" style="display:none">NEW</span>
+      </a>
       <a href="#" class="nav-item" data-page="security">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
         <span>Безопасность</span>
@@ -742,5 +747,73 @@
           </div>
         </div>
         <button class="btn btn-primary btn-full" onclick="document.getElementById('subQRModal').style.display='none'">Закрыть</button>
+      </div>
+    </div>
+
+    <!-- SNI WHITELIST PAGE (v6.0) -->
+    <div id="sniPage" class="page-content hidden">
+      <div class="page-header">
+        <h1 class="page-title">SNI Whitelist</h1>
+        <div style="display: flex; gap: 10px; align-items: center;">
+          <label class="switch" style="margin: 0;">
+            <input type="checkbox" id="sniToggle" onchange="toggleSNI()">
+            <span class="slider"></span>
+          </label>
+          <span id="sniStatusText" style="font-size: 13px; color: var(--text-secondary);">Выключено</span>
+        </div>
+      </div>
+
+      <div class="chart-container">
+        <h3 style="margin-bottom: 15px;">🔍 Поиск и добавление домена</h3>
+        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+          <input type="text" id="sniSearchInput" class="form-input" placeholder="Введите домен (например: cloudflare.com)" style="flex: 1;">
+          <button class="btn btn-primary" onclick="searchSNIDomain()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            Поиск
+          </button>
+        </div>
+        <div id="sniSearchResults" style="display: none;"></div>
+      </div>
+
+      <div class="chart-container" style="margin-top: 20px;">
+        <h3 style="margin-bottom: 15px;">📋 Белый список доменов</h3>
+        <div id="sniDomainsList" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
+        <div id="sniEmptyState" style="text-align: center; padding: 30px; color: var(--text-secondary);">
+          Нет доменов в белом списке. Добавьте через поиск выше.
+        </div>
+      </div>
+
+      <div class="chart-container" style="margin-top: 20px;">
+        <h3 style="margin-bottom: 15px;">⭐ Популярные домены (быстрое добавление)</h3>
+        <div id="sniPresets" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px;"></div>
+      </div>
+
+      <div class="chart-container" style="margin-top: 20px;">
+        <h3 style="margin-bottom: 15px;">📝 История поиска</h3>
+        <div style="overflow-x: auto;">
+          <table style="width: 100%; border-collapse: collapse;" id="sniSearchLogTable">
+            <thead>
+              <tr style="border-bottom: 1px solid var(--border);">
+                <th style="text-align: left; padding: 10px; font-size: 12px; color: var(--text-secondary);">Домен</th>
+                <th style="text-align: left; padding: 10px; font-size: 12px; color: var(--text-secondary);">DNS</th>
+                <th style="text-align: left; padding: 10px; font-size: 12px; color: var(--text-secondary);">HTTP</th>
+                <th style="text-align: left; padding: 10px; font-size: 12px; color: var(--text-secondary);">Время</th>
+              </tr>
+            </thead>
+            <tbody id="sniSearchLogBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="chart-container" style="margin-top: 20px;">
+        <h3 style="margin-bottom: 10px;">ℹ️ Что такое SNI Whitelist?</h3>
+        <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.6;">
+          SNI (Server Name Indication) — это расширение TLS, которое позволяет указать имя хоста при установлении защищённого соединения.
+          Белый список SNI помогает замаскировать трафик под легитимные сайты (Cloudflare, Microsoft, Apple, etc.),
+          что делает практически невозможным определение того, что вы используете прокси.
+          <br><br>
+          <strong>Как работает:</strong> Xray с Reality использует домены из белого списка как "маскировочные" SNI.
+          Провайдер видит только соединение с обычным сайтом (например, Cloudflare), а не с прокси-сервером.
+        </p>
       </div>
     </div>

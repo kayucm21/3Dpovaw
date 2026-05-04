@@ -1847,3 +1847,197 @@ app.get('/api/traffic/:token', requireAuth, (req, res) => {
   }
 });
 
+
+// ═══════════════════════════════════════════════════════════════
+// V6.0 — SNI WHITELIST (Белые списки доменов)
+// ═══════════════════════════════════════════════════════════════
+
+const SNI_FILE = path.join(__dirname, '../data/sni-whitelist.json');
+const SNI_SEARCH_LOG = path.join(__dirname, '../data/sni-search-log.json');
+
+// Загрузка SNI whitelist
+function loadSNIWhitelist() {
+  if (!fs.existsSync(SNI_FILE)) return { domains: [], enabled: false, lastUpdated: null };
+  try { return JSON.parse(fs.readFileSync(SNI_FILE, 'utf8')); } catch { return { domains: [], enabled: false, lastUpdated: null }; }
+}
+
+// Сохранение SNI whitelist
+function saveSNIWhitelist(data) {
+  data.lastUpdated = new Date().toISOString();
+  fs.writeFileSync(SNI_FILE, JSON.stringify(data, null, 2));
+}
+
+// Загрузка лога поиска
+function loadSNISearchLog() {
+  if (!fs.existsSync(SNI_SEARCH_LOG)) return [];
+  try { return JSON.parse(fs.readFileSync(SNI_SEARCH_LOG, 'utf8')); } catch { return []; }
+}
+
+function saveSNISearchLog(log) {
+  fs.writeFileSync(SNI_SEARCH_LOG, JSON.stringify(log.slice(-500), null, 2));
+}
+
+// Обновление Xray config с SNI whitelist
+function updateXraySNI(whitelist) {
+  try {
+    const xrayConfig = '/usr/local/etc/xray/config.json';
+    if (!fs.existsSync(xrayConfig)) return false;
+    
+    const config = JSON.parse(fs.readFileSync(xrayConfig, 'utf8'));
+    
+    // Добавляем SNI в realitySettings.serverNames
+    if (config.inbounds && config.inbounds[0] && config.inbounds[0].streamSettings && config.inbounds[0].streamSettings.realitySettings) {
+      const reality = config.inbounds[0].streamSettings.realitySettings;
+      const existing = new Set(reality.serverNames || []);
+      whitelist.domains.forEach(d => existing.add(d));
+      reality.serverNames = Array.from(existing);
+      
+      fs.writeFileSync(xrayConfig, JSON.stringify(config, null, 2));
+      
+      // Reload Xray
+      exec('systemctl reload xray 2>/dev/null || systemctl restart xray 2>/dev/null || true');
+      return true;
+    }
+  } catch (e) {
+    console.error('Failed to update Xray SNI:', e);
+  }
+  return false;
+}
+
+// API: Получить SNI whitelist
+app.get('/api/sni-whitelist', requireAuth, (req, res) => {
+  try {
+    const data = loadSNIWhitelist();
+    res.json(data);
+  } catch {
+    res.status(500).json({ error: 'Failed to load SNI whitelist' });
+  }
+});
+
+// API: Добавить домен в whitelist
+app.post('/api/sni-whitelist', requireAuth, (req, res) => {
+  try {
+    const { domain } = req.body;
+    if (!domain || typeof domain !== 'string') {
+      return res.status(400).json({ error: 'Domain required' });
+    }
+    
+    const cleanDomain = domain.toLowerCase().trim().replace(/^https?:\/\//, '').replace(/\/.*$/, '');
+    if (!cleanDomain || cleanDomain.length < 3) {
+      return res.status(400).json({ error: 'Invalid domain' });
+    }
+    
+    const data = loadSNIWhitelist();
+    if (!data.domains.includes(cleanDomain)) {
+      data.domains.push(cleanDomain);
+      data.domains.sort();
+      saveSNIWhitelist(data);
+      updateXraySNI(data);
+    }
+    
+    res.json({ success: true, domain: cleanDomain, domains: data.domains });
+  } catch {
+    res.status(500).json({ error: 'Failed to add domain' });
+  }
+});
+
+// API: Удалить домен из whitelist
+app.delete('/api/sni-whitelist', requireAuth, (req, res) => {
+  try {
+    const { domain } = req.body;
+    const data = loadSNIWhitelist();
+    data.domains = data.domains.filter(d => d !== domain);
+    saveSNIWhitelist(data);
+    updateXraySNI(data);
+    res.json({ success: true, domains: data.domains });
+  } catch {
+    res.status(500).json({ error: 'Failed to remove domain' });
+  }
+});
+
+// API: Включить/выключить SNI whitelist
+app.post('/api/sni-whitelist/toggle', requireAuth, (req, res) => {
+  try {
+    const { enabled } = req.body;
+    const data = loadSNIWhitelist();
+    data.enabled = !!enabled;
+    saveSNIWhitelist(data);
+    res.json({ success: true, enabled: data.enabled });
+  } catch {
+    res.status(500).json({ error: 'Failed to toggle SNI' });
+  }
+});
+
+// API: Поиск домена (проверка доступности)
+app.post('/api/sni-whitelist/search', requireAuth, async (req, res) => {
+  try {
+    const { query } = req.body;
+    if (!query) return res.status(400).json({ error: 'Query required' });
+    
+    const cleanQuery = query.toLowerCase().trim().replace(/^https?:\/\//, '').replace(/\/.*$/, '');
+    
+    // Проверяем DNS
+    const { exec } = require('child_process');
+    const dnsCheck = new Promise((resolve) => {
+      exec(`dig +short ${cleanQuery} 2>/dev/null | head -1`, { timeout: 5000 }, (err, stdout) => {
+        resolve(stdout.trim());
+      });
+    });
+    
+    // Проверяем HTTP
+    const httpCheck = new Promise((resolve) => {
+      exec(`curl -sI --connect-timeout 5 -m 10 "https://${cleanQuery}" 2>/dev/null | head -1`, { timeout: 10000 }, (err, stdout) => {
+        resolve(stdout.trim());
+      });
+    });
+    
+    const [dnsResult, httpResult] = await Promise.all([dnsCheck, httpCheck]);
+    
+    const result = {
+      domain: cleanQuery,
+      hasDNS: !!dnsResult && dnsResult.length > 0,
+      dnsIP: dnsResult || null,
+      httpStatus: httpResult || null,
+      accessible: !!httpResult && httpResult.includes('200'),
+      timestamp: new Date().toISOString()
+    };
+    
+    // Сохраняем в лог
+    const log = loadSNISearchLog();
+    log.push(result);
+    saveSNISearchLog(log);
+    
+    res.json(result);
+  } catch {
+    res.status(500).json({ error: 'Search failed' });
+  }
+});
+
+// API: Лог поиска
+app.get('/api/sni-whitelist/search-log', requireAuth, (req, res) => {
+  try {
+    const log = loadSNISearchLog();
+    res.json(log.slice(-50).reverse());
+  } catch {
+    res.status(500).json({ error: 'Failed to load log' });
+  }
+});
+
+// API: Популярные SNI (предустановленные)
+app.get('/api/sni-whitelist/presets', requireAuth, (req, res) => {
+  res.json([
+    { domain: 'www.cloudflare.com', category: 'CDN' },
+    { domain: 'www.microsoft.com', category: 'Tech' },
+    { domain: 'www.apple.com', category: 'Tech' },
+    { domain: 'www.amazon.com', category: 'Shopping' },
+    { domain: 'www.google.com', category: 'Search' },
+    { domain: 'www.youtube.com', category: 'Video' },
+    { domain: 'www.facebook.com', category: 'Social' },
+    { domain: 'www.twitter.com', category: 'Social' },
+    { domain: 'www.github.com', category: 'Tech' },
+    { domain: 'www.linkedin.com', category: 'Social' },
+    { domain: 'www.netflix.com', category: 'Video' },
+    { domain: 'www.spotify.com', category: 'Music' }
+  ]);
+});
+

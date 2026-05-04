@@ -1103,3 +1103,209 @@ window.goToPage = function(page) {
     loadSubscriptions();
   }
 };
+
+// ═══════════════════════════════════════════════════════════════
+// V6.0 — SNI WHITELIST
+// ═══════════════════════════════════════════════════════════════
+
+async function loadSNIPage() {
+  await loadSNIWhitelist();
+  await loadSNIPresets();
+  await loadSNISearchLog();
+}
+
+async function loadSNIWhitelist() {
+  try {
+    const res = await fetch('/api/sni-whitelist');
+    if (res.ok) {
+      const data = await res.json();
+      renderSNIDomains(data);
+      document.getElementById('sniToggle').checked = data.enabled;
+      document.getElementById('sniStatusText').textContent = data.enabled ? 'Включено' : 'Выключено';
+      document.getElementById('sniStatusText').style.color = data.enabled ? 'var(--success)' : 'var(--text-secondary)';
+    }
+  } catch (e) {
+    console.error('Failed to load SNI whitelist:', e);
+  }
+}
+
+function renderSNIDomains(data) {
+  const container = document.getElementById('sniDomainsList');
+  const emptyState = document.getElementById('sniEmptyState');
+  if (!container) return;
+
+  if (!data.domains || data.domains.length === 0) {
+    container.style.display = 'none';
+    emptyState.style.display = 'block';
+    return;
+  }
+
+  container.style.display = 'flex';
+  emptyState.style.display = 'none';
+  container.innerHTML = data.domains.map(domain => `
+    <div style="display: flex; align-items: center; gap: 6px; background: var(--bg-input); padding: 6px 12px; border-radius: 20px; font-size: 13px;">
+      <span>${escapeHtml(domain)}</span>
+      <button onclick="removeSNIDomain('${escapeHtml(domain)}')" style="background: none; border: none; color: var(--danger); cursor: pointer; padding: 0; font-size: 16px; line-height: 1;">×</button>
+    </div>
+  `).join('');
+}
+
+async function searchSNIDomain() {
+  const input = document.getElementById('sniSearchInput');
+  const query = input.value.trim();
+  if (!query) return;
+
+  const btn = document.querySelector('#sniPage button[onclick="searchSNIDomain()"]');
+  btn.disabled = true;
+  btn.innerHTML = '⏳ Поиск...';
+
+  try {
+    const res = await fetch('/api/sni-whitelist/search', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query })
+    });
+
+    const resultsDiv = document.getElementById('sniSearchResults');
+    if (res.ok) {
+      const result = await res.json();
+      resultsDiv.style.display = 'block';
+      resultsDiv.innerHTML = `
+        <div style="padding: 15px; background: var(--bg-input); border-radius: var(--radius); margin-top: 10px;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <div style="font-weight: 600;">${escapeHtml(result.domain)}</div>
+              <div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">
+                DNS: ${result.hasDNS ? '🟢 ' + result.dnsIP : '🔴 Не найден'}
+                | HTTP: ${result.accessible ? '🟢 Доступен' : '🟡 Проверка'}
+              </div>
+            </div>
+            <button class="btn btn-sm btn-primary" onclick="addSNIDomain('${escapeHtml(result.domain)}')">Добавить</button>
+          </div>
+        </div>
+      `;
+    } else {
+      showToast('Ошибка поиска', 'error');
+    }
+  } catch {
+    showToast('Ошибка соединения', 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = `
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      Поиск
+    `;
+  }
+}
+
+async function addSNIDomain(domain) {
+  try {
+    const res = await fetch('/api/sni-whitelist', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ domain })
+    });
+
+    if (res.ok) {
+      showToast('Домен добавлен!', 'success');
+      document.getElementById('sniSearchResults').style.display = 'none';
+      document.getElementById('sniSearchInput').value = '';
+      loadSNIWhitelist();
+    } else {
+      showToast('Ошибка добавления', 'error');
+    }
+  } catch {
+    showToast('Ошибка соединения', 'error');
+  }
+}
+
+async function removeSNIDomain(domain) {
+  if (!confirm(`Удалить ${domain} из белого списка?`)) return;
+  try {
+    const res = await fetch('/api/sni-whitelist', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ domain })
+    });
+
+    if (res.ok) {
+      showToast('Домен удалён', 'success');
+      loadSNIWhitelist();
+    }
+  } catch {
+    showToast('Ошибка', 'error');
+  }
+}
+
+async function toggleSNI() {
+  const enabled = document.getElementById('sniToggle').checked;
+  try {
+    const res = await fetch('/api/sni-whitelist/toggle', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ enabled })
+    });
+
+    if (res.ok) {
+      showToast(enabled ? 'SNI Whitelist включён' : 'SNI Whitelist выключен', 'success');
+      document.getElementById('sniStatusText').textContent = enabled ? 'Включено' : 'Выключено';
+      document.getElementById('sniStatusText').style.color = enabled ? 'var(--success)' : 'var(--text-secondary)';
+    }
+  } catch {
+    showToast('Ошибка', 'error');
+  }
+}
+
+async function loadSNIPresets() {
+  try {
+    const res = await fetch('/api/sni-whitelist/presets');
+    if (res.ok) {
+      const presets = await res.json();
+      const container = document.getElementById('sniPresets');
+      if (!container) return;
+      container.innerHTML = presets.map(p => `
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; background: var(--bg-input); border-radius: var(--radius);">
+          <div>
+            <div style="font-weight: 500; font-size: 13px;">${escapeHtml(p.domain)}</div>
+            <div style="font-size: 11px; color: var(--text-secondary);">${escapeHtml(p.category)}</div>
+          </div>
+          <button class="btn btn-sm" onclick="addSNIDomain('${escapeHtml(p.domain)}')">+</button>
+        </div>
+      `).join('');
+    }
+  } catch {}
+}
+
+async function loadSNISearchLog() {
+  try {
+    const res = await fetch('/api/sni-whitelist/search-log');
+    if (res.ok) {
+      const logs = await res.json();
+      const tbody = document.getElementById('sniSearchLogBody');
+      if (!tbody) return;
+
+      if (logs.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 20px; color: var(--text-secondary);">Нет записей</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = logs.map(log => `
+        <tr style="border-bottom: 1px solid var(--border);">
+          <td style="padding: 10px; font-size: 13px;">${escapeHtml(log.domain)}</td>
+          <td style="padding: 10px; font-size: 13px;">${log.hasDNS ? '🟢 ' + log.dnsIP : '🔴'}</td>
+          <td style="padding: 10px; font-size: 13px;">${log.accessible ? '🟢' : '🟡'}</td>
+          <td style="padding: 10px; font-size: 12px; color: var(--text-secondary);">${new Date(log.timestamp).toLocaleString('ru-RU')}</td>
+        </tr>
+      `).join('');
+    }
+  } catch {}
+}
+
+// Обновление навигации
+const _oldGoToPage2 = window.goToPage;
+window.goToPage = function(page) {
+  _oldGoToPage2(page);
+  if (page === 'sni') {
+    loadSNIPage();
+  }
+};

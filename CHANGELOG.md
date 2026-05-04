@@ -1,139 +1,135 @@
 ﻿# CHANGELOG - NaiveProxy Panel
 
-## 2026-05-04 - Глобальное обновление v5.0 — Ultra-Fast Install & VDS Auto-Tune
+## 2026-05-04 - Глобальное обновление v6.0 — Reality Шифрование + SNI Маскировка + Скрипты
 
-### ✨ Новые функции v5.0
+### ✨ Новые функции v6.0
 
-#### ⚡ Ultra-Fast Installation (60 секунд!)
-- ✅ **Быстрая установка** — оптимизированный скрипт без задержек
-- ✅ **Параллельные процессы** — apt и сборка данных одновременно
-- ✅ **Минимум зависимостей** — только необходимое для работы
-- ✅ **Автоматический выбор** — умные дефолты для неинтерактивного режима
-- ✅ **Git shallow clone** — `--depth=1` для быстрой загрузки
-- ✅ **npm production only** — `--omit=dev --no-audit --no-fund`
+#### 🔒 Reality + XTLS-Vision (МАКСИМАЛЬНОЕ ШИФРОВАНИЕ)
+- ✅ **Reality протокол** — невозможно детектировать прокси-трафик
+- ✅ **XTLS-Vision flow** — forward secrecy, защита прошлого трафика
+- ✅ **x25519 ключи** — автогенерация Reality private/public ключей
+- ✅ **Short ID** — случайные short IDs для маскировки
+- ✅ **SNI spoofing** — трафик выглядит как обычный HTTPS к легитимным сайтам
+- ✅ **Zero-RTT** — минимальная задержка при подключении
+- ✅ **GeoIP/GeoSite** — блокировка рекламы и приватных IP
 
-#### 🚀 VDS Auto-Tune & Optimization
-- ✅ **Автоопределение ресурсов** — RAM, CPU cores, тип диска (SSD/HDD)
-- ✅ **Системная оптимизация** — `/etc/sysctl.d/99-naiveproxy.conf`
-- ✅ **BBR + TCP Fast Open** — сниженная задержка, повышенная пропускная способность
-- ✅ **Увеличенные буферы** — `rmem_max/wmem_max = 67108864` (64MB)
-- ✅ **Limits оптимизация** — `/etc/security/limits.d/99-naiveproxy.conf`
-- ✅ **File descriptors** — `nofile 1048576`, `nproc 65536`
-- ✅ **TCP оптимизации** — `tcp_tw_reuse`, `tcp_fin_timeout`, `tcp_keepalive_time`
-- ✅ **Network tuning** — `netdev_max_backlog`, `ip_local_port_range`
+#### 🛡️ SNI Whitelist (БЕЛЫЕ СПИСКИ)
+- ✅ **Поиск доменов** — проверка DNS и HTTP доступности
+- ✅ **Быстрое добавление** — кнопка "Добавить" из результатов поиска
+- ✅ **Популярные домены** — предустановленный список (Cloudflare, Microsoft, Apple, Amazon, Google)
+- ✅ **Визуальный список** — теги с возможностью удаления
+- ✅ **Включение/выключение** — переключатель в интерфейсе
+- ✅ **Автообновление Xray** — при добавлении домена Xray перезагружается автоматически
+- ✅ **История поиска** — лог последних 500 проверок
+- ✅ **Информационный блок** — объяснение как работает SNI маскировка
 
-#### 🔄 Auto-Update из GitHub
-- ✅ **Git pull команда** — быстрое обновление одной командой
-- ✅ **PM2 restart** — автоматический рестарт после обновления
-- ✅ **Сохранение конфига** — данные не теряются при обновлении
-
-#### 📱 Подписки VLESS (из v4.0)
-- ✅ **Автообновляемые подписки** — `https://domain.com/sub/token`
-- ✅ **QR-коды** — сканирование в приложении
-- ✅ **Срок действия** — 7/30/90/365 дней
-- ✅ **Лимит трафика** — ограничение GB на подписку
-- ✅ **Поддержка клиентов** — Karing, v2rayNG, Shadowrocket, Quantumult X
-
-#### ⚡ Тюнинг VLESS 50MB (из v4.0)
-- ✅ **Буфер 50MB** — увеличенная пропускная способность
-- ✅ **TCP Fast Open** — снижение задержки при подключении
-- ✅ **MUX Concurrency 8** — стабильность соединения
-- ✅ **WebSocket Early Data** — быстрый старт
-- ✅ **Read/Write Buffer** — оптимизированные буферы 52428800 байт
+#### 🖥️ Bash Скрипты Управления
+- ✅ **panel-info.sh** — просмотр всех данных панели:
+  - URL панели (автоопределение порта/домена/HTTPS)
+  - Логин и пароль
+  - Статус сервисов (Xray, Caddy, Nginx, Панель)
+  - Готовые ссылки подключения
+  - Статус WARP и SNI
+  - Быстрые команды
+- ✅ **panel-password.sh** — смена логина и пароля:
+  - Проверка совпадения паролей
+  - Bcrypt хеширование
+  - Автоматический рестарт панели
+  - Защита от пустых/коротких паролей
 
 ### 🛠️ Технические улучшения
 
 #### Install Script (install.sh)
-- ✅ Полная переработка для скорости
-- ✅ Параллельное выполнение задач
-- ✅ VDS auto-detect (RAM/CPU/Disk)
-- ✅ Автоматическая sysctl оптимизация
-- ✅ Limits настройка
-- ✅ Быстрый git clone (--depth=1)
-- ✅ npm install с флагами скорости
-- ✅ PM2 startup + save
-- ✅ Firewall авто-настройка
-- ✅ Nginx reverse proxy (режим 1 и 3)
-- ✅ Let's Encrypt HTTPS (режим 3)
+- ✅ Копирование panel-info.sh и panel-password.sh в /usr/local/bin
+- ✅ Доступны глобально как команды: `panel-info`, `panel-password`
+
+#### VLESS Install (scripts/install_vless.sh)
+- ✅ Полная переработка с Reality вместо обычного TLS
+- ✅ Автогенерация x25519 ключей
+- ✅ Short IDs для маскировки
+- ✅ SNI serverNames из whitelist
+- ✅ XTLS-Vision flow
+- ✅ Sniffing destOverride (http, tls, quic)
+- ✅ GeoSite категория ads — блокировка рекламы
 
 #### Backend (server/index.js)
-- ✅ `GET /api/subscriptions` — список подписок
-- ✅ `POST /api/subscriptions` — создание подписки
-- ✅ `GET /sub/:token` — публичный API для клиентов
-- ✅ `DELETE /api/subscriptions/:id` — удаление
-- ✅ `POST /api/subscriptions/:id/renew` — продление
-- ✅ `GET /api/traffic/:token` — статистика трафика
+- ✅ `GET /api/sni-whitelist` — список доменов
+- ✅ `POST /api/sni-whitelist` — добавить домен
+- ✅ `DELETE /api/sni-whitelist` — удалить домен
+- ✅ `POST /api/sni-whitelist/toggle` — включить/выключить
+- ✅ `POST /api/sni-whitelist/search` — поиск с DNS/HTTP проверкой
+- ✅ `GET /api/sni-whitelist/presets` — популярные домены
+- ✅ `GET /api/sni-whitelist/search-log` — история
+- ✅ Автообновление Xray config при изменении whitelist
 
 #### Frontend (public/index.html, public/js/app.js)
-- ✅ Страница "Подписки" в меню
-- ✅ Модальные окна QR-кодов
-- ✅ Копирование ссылок
-- ✅ Создание подписок с настройками
-- ✅ Статус подписки (активна/истекла)
-
-#### Скрипты установки
-- ✅ `install_vless.sh` — тюнинг 50MB буфера, TCP оптимизации
-- ✅ `install_naiveproxy.sh` — быстрая установка Caddy
+- ✅ Страница "SNI Whitelist" в меню
+- ✅ Поисковая строка с кнопкой
+- ✅ Результаты поиска с DNS/HTTP статусом
+- ✅ Визуальные теги доменов
+- ✅ Предустановленные домены (сетка карточек)
+- ✅ Таблица истории поиска
+- ✅ Информационный блок
+- ✅ Переключатель включения/выключения
 
 #### Новые файлы
 ```
-/etc/sysctl.d/99-naiveproxy.conf        — системная оптимизация
-/etc/security/limits.d/99-naiveproxy.conf — limits настройки
-panel/data/subscriptions.json           — подписки пользователей
-panel/data/traffic.json                 — учёт трафика
+panel-info.sh                           — скрипт просмотра данных
+panel-password.sh                       — скрипт смены пароля
+panel/data/reality-keys.json            — Reality ключи
+panel/data/sni-whitelist.json           — белый список SNI
+panel/data/sni-search-log.json          — лог поиска
 ```
 
 ### 📦 Обновлённые файлы
 ```
-install.sh                              — Ultra-Fast Installer v5.0
-README.md                               — обновлённая документация
+README.md                               — v6.0 документация
 CHANGELOG.md                            — история изменений
-panel/server/index.js                   — API подписок
-panel/public/index.html                 — страница подписок
-panel/public/js/app.js                  — логика подписок
-panel/scripts/install_vless.sh          — тюнинг VLESS 50MB
-panel/public/css/style.css              — стили
+install.sh                              — установка скриптов управления
+panel/scripts/install_vless.sh          — Reality + XTLS-Vision
+panel/server/index.js                   — SNI API
+panel/public/index.html                 — страница SNI
+panel/public/js/app.js                  — логика SNI
 ```
 
-### ⚙️ Установка v5.0
+### ⚙️ Установка v6.0
 ```bash
-# Быстрая установка (60 секунд)
+# Быстрая установка
 bash <(curl -fsSL https://raw.githubusercontent.com/kayucm21/3Dpovaw/main/install.sh)
 
-# Обновление с v4.0
-cd /opt/naiveproxy-panel && git pull
-cd panel && npm install
-pm2 restart naiveproxy-panel
+# После установки:
+panel-info        # посмотреть данные
+panel-password    # сменить пароль
 ```
 
-### 🔧 Миграция с v4.0
+### 🔧 Миграция с v5.0
 1. Сделайте бэкап через панель
-2. Обновите файлы: `git pull`
-3. Установите зависимости: `npm install`
-4. Перезапустите: `pm2 restart naiveproxy-panel`
-5. Наслаждайтесь скоростью!
+2. Обновите: `cd /opt/naiveproxy-panel && git pull`
+3. Переустановите VLESS: раздел "Установка" → выберите VLESS
+4. Настройте SNI Whitelist
 
 ### 🐛 Исправления
-- Удалена секция "Ссылки" из README
-- Оптимизирована скорость установки
-- Улучшена обработка ошибок
-- Автоматический выбор режима при неинтерактивном запуске
+- Улучшено шифрование VLESS (Reality вместо обычного TLS)
+- Добавлены скрипты управления
+- SNI маскировка для защиты от детектирования
 
-### 🚀 Планы на v5.1
+### 🚀 Планы на v6.1
 - Telegram бот для уведомлений
 - Мультиязычность (RU/EN)
-- Расширенная статистика трафика
 - Авто-продление подписок
-- Групповые подписки (семейный план)
+- Групповые подписки
+
+---
+
+## 2026-05-04 - Глобальное обновление v5.0 — Ultra-Fast Install & VDS Auto-Tune
+(см. предыдущую версию CHANGELOG.md)
 
 ---
 
 ## 2026-05-04 - Глобальное обновление v4.0 — Подписки VLESS и Тюнинг Скорости
-
 (см. предыдущую версию CHANGELOG.md)
 
 ---
 
 ## 2026-05-04 - Глобальное обновление v3.0 — Modern UI/UX и Расширенные функции
-
 (см. предыдущую версию CHANGELOG.md)

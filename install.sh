@@ -305,6 +305,17 @@ fi
 log_ok "Конфигурация сохранена"
 
 # ═══════════════════════════════════════════════════════════════
+# INSTALL HELPER SCRIPTS
+# ═══════════════════════════════════════════════════════════════
+log_step "⚡ Установка скриптов управления"
+
+cp "$PANEL_DIR/panel-info.sh" /usr/local/bin/panel-info 2>/dev/null || true
+cp "$PANEL_DIR/panel-password.sh" /usr/local/bin/panel-password 2>/dev/null || true
+chmod +x /usr/local/bin/panel-info /usr/local/bin/panel-password 2>/dev/null || true
+
+log_ok "Скрипты установлены: panel-info, panel-password"
+
+# ═══════════════════════════════════════════════════════════════
 # FIREWALL (быстрая настройка)
 # ═══════════════════════════════════════════════════════════════
 log_step "⚡ Настройка firewall"

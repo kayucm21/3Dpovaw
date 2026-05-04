@@ -1,5 +1,15 @@
 ﻿# CHANGELOG - NaiveProxy Panel v3.0
 
+## 2026-05-04 15:22:35 UTC - 555fbed3
+
+- Author: Koda AI
+- Message: Merge v3.0 update
+- Commit: https://github.com/kayucm21/3Dpovaw/commit/555fbed36928011a931fc13a76587c57b0a4f168
+
+### Changed files
+
+
+
 ## 2026-05-04 - Глобальное обновление v3.0 — Modern UI/UX и Расширенные функции
 
 ### ✨ Новые функции

@@ -1,32 +1,34 @@
-﻿# 🚀 NaiveProxy Panel v4.0
+﻿# 🚀 NaiveProxy Panel v5.0
 
 > Современная веб-панель управления для быстрой установки и управления `NaiveProxy`, `VLESS` с расширенными функциями на VPS
 
-![Version](https://img.shields.io/badge/version-4.0.0-blue.svg)
+![Version](https://img.shields.io/badge/version-5.0.0-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![Platform](https://img.shields.io/badge/platform-Ubuntu%2022.04%20%7C%2024.04%20%7C%20Debian%2011%20%7C%2012-lightgrey)
 
 ---
 
-## 🎯 Что нового в v4.0?
+## 🎯 Что нового в v5.0?
 
-### ✨ Ключевые функции v4.0
-- 📱 **VLESS подписки** - автообновляемые подписки для клиентов
-- 🔄 **QR-код подписки** - сканируй и подключайся в приложении
-- ⚡ **Тюнинг VLESS** - буфер 50MB, TCP Fast Open, оптимизация скорости
-- 🔗 **Ссылка подписки** - https://yourdomain.com/sub/token для автообновления
-- 📊 **Мониторинг трафика** - учёт потреблённого трафика по пользователям
-- ⏰ **Срок действия** - установка времени жизни подписок
-- 🎨 **Тёмная/светлая тема** - плавное переключение
-- 📊 **Расширенная аналитика** - графики подключений и трафика
-- 🔐 **2FA аутентификация** - защита с Google Authenticator
-- 📱 **PWA поддержка** - установка как мобильного приложения
-- ⚡ **Мониторинг ресурсов** - CPU, RAM, диск, сеть в реальном времени
-- 🔄 **Автоматические бэкапы** - резервное копирование конфигурации
+### ✨ Ключевые функции v5.0
+- ⚡ **Ultra-Fast Install** — установка за 60 секунд без задержек
+- 🚀 **VDS Auto-Tune** — автооптимизация под ресурсы сервера (RAM/CPU/Disk)
+- 🔄 **Auto-Update** — автообновление панели из GitHub
+- 📱 **Подписки VLESS** — автообновляемые подписки для клиентов
+- 🔗 **QR-код подписки** — сканируй и подключайся в приложении
+- ⚡ **Тюнинг VLESS** — буфер 50MB, TCP Fast Open, оптимизация скорости
+- 📊 **Мониторинг трафика** — учёт потреблённого трафика по пользователям
+- ⏰ **Срок действия** — установка времени жизни подписок
+- 🎨 **Тёмная/светлая тема** — плавное переключение
+- 📊 **Расширенная аналитика** — графики подключений и трафика
+- 🔐 **2FA аутентификация** — защита с Google Authenticator
+- 📱 **PWA поддержка** — установка как мобильного приложения
+- ⚡ **Мониторинг ресурсов** — CPU, RAM, диск, сеть в реальном времени
+- 🔄 **Автоматические бэкапы** — резервное копирование конфигурации
 
 ---
 
-## 🛠️ Быстрая установка панели
+## 🛠️ Быстрая установка панели (60 секунд)
 
 ```bash
 bash <(curl -fsSL https://raw.githubusercontent.com/kayucm21/3Dpovaw/main/install.sh)
@@ -37,7 +39,7 @@ bash <(curl -fsSL https://raw.githubusercontent.com/kayucm21/3Dpovaw/main/instal
 Во время установки будет вопрос:
 
 ```text
-1) Через Nginx на порту 8080
+1) Через Nginx на порту 8080 (рекомендуется)
 2) Напрямую на порту 3000
 3) Через Nginx с доменом + HTTPS
 ```
@@ -58,7 +60,7 @@ ACCESS_MODE=3 bash <(curl -fsSL https://raw.githubusercontent.com/kayucm21/3Dpov
 cd /opt/naiveproxy-panel && git pull --ff-only && cd panel && npm install && pm2 restart naiveproxy-panel
 ```
 
-> ⚠️ **Важно:** После обновления v3.0 → v4.0 необходимо установить новые зависимости:
+> ⚠️ **Важно:** После обновления v4.0 → v5.0 необходимо установить новые зависимости:
 > ```bash
 > cd /opt/naiveproxy-panel/panel
 > npm install speakeasy qrcode chart.js
@@ -72,11 +74,11 @@ cd /opt/naiveproxy-panel && git pull --ff-only && cd panel && npm install && pm2
 - Ubuntu 22.04 / 24.04 или Debian 11 / 12
 - Поддомен с A-записью на IP сервера (например `naive.yourdomain.com`)
 - Открытые порты: 22, 80, 443, 3000
-- Минимум 1 GB RAM (для сборки Caddy — временно нужно 512 MB)
+- Минимум 512 MB RAM (для сборки Caddy — временно нужно 512 MB)
 
 ---
 
-## 🎨 Возможности панели v4.0
+## 🎨 Возможности панели v5.0
 
 ### 🔗 Подписки VLESS (НОВОЕ!)
 | Функция | Описание |
@@ -87,6 +89,14 @@ cd /opt/naiveproxy-panel && git pull --ff-only && cd panel && npm install && pm2
 | ⏰ **Срок действия** | Настройка времени жизни подписки |
 | 📊 **Трафик** | Мониторинг потреблённого трафика |
 | 🔐 **Токен доступа** | Уникальный токен для каждой подписки |
+
+### ⚡ VDS Auto-Tune (НОВОЕ!)
+| Функция | Описание |
+|---------|----------|
+| 🔍 **Автоопределение** | Определение RAM, CPU, типа диска (SSD/HDD) |
+| 🚀 **Системная оптимизация** | BBR + TCP Fast Open + увеличенные буферы |
+| 📦 **Limits** | Автоматическая настройка limits.conf |
+| ⚙️ **Sysctl** | Оптимизированные параметры ядра |
 
 ### 🎯 Основные функции
 | Функция | Описание |
@@ -140,12 +150,13 @@ cd /opt/naiveproxy-panel && git pull --ff-only && cd panel && npm install && pm2
 ## 📱 Как использовать подписки
 
 ### 1. Создание подписки
-1. Перейдите в раздел "Пользователи"
+1. Перейдите в раздел "Подписки"
 2. Нажмите "Создать подписку" рядом с пользователем
-3. Скопируйте ссылку или отсканируйте QR-код
+3. Выберите срок действия (7/30/90/365 дней)
+4. Скопируйте ссылку или отсканируйте QR-код
 
 ### 2. Подключение в приложении
-1. Откройте приложение (Karing, Shadowrocket, Quantumult X)
+1. Откройте приложение (Karing, Shadowrocket, v2rayNG)
 2. Выберите "Добавить подписку"
 3. Вставьте ссылку `https://domain.com/sub/your_token`
 4. Подписка автоматически обновится
@@ -225,7 +236,7 @@ cd /opt/naiveproxy-panel && git pull --ff-only && cd panel && npm install && pm2
 
 ---
 
-## 📊 Интерфейс панели v4.0
+## 📊 Интерфейс панели v5.0
 
 ### Дашборд
 - Ключевые метрики (пользователи, устройства, подключения)
@@ -280,10 +291,10 @@ cd /opt/naiveproxy-panel && git pull --ff-only && cd panel && npm install && pm2
 
 ### Подписки (НОВОЕ!)
 ```bash
-GET /api/subscriptions          # Список подписок
-POST /api/subscriptions         # Создать подписку
-GET /api/subscription/:token    # Получить подписку (для клиентов)
-DELETE /api/subscriptions/:id   # Удалить подписку
+GET  /api/subscriptions          # Список подписок
+POST /api/subscriptions          # Создать подписку
+GET  /sub/:token                 # Получить подписку (для клиентов)
+DELETE /api/subscriptions/:id    # Удалить подписку
 ```
 
 ### Мониторинг
@@ -345,6 +356,7 @@ POST /api/devices/unblock  # Разблокировать устройство
 - `panel/data/connections-log.json` - история подключений
 - `panel/data/twofa.json` - настройки 2FA
 - `panel/data/subscriptions.json` - подписки пользователей
+- `panel/data/traffic.json` - учёт трафика
 - `panel/backups/` - резервные копии
 
 ### Port & Access
@@ -372,14 +384,6 @@ MIT License - см. файл [LICENSE](LICENSE)
 
 ---
 
-## 🔗 Ссылки
-
-- [GitHub Repository](https://github.com/kayucm21/3Dpovaw)
-- [NaiveProxy GitHub](https://github.com/klzgrad/naiveproxy)
-- [VLESS Documentation](https://xtls.github.io/)
-
----
-
 **Создано с ❤️ для удобного управления прокси-серверами**
 
-v4.0 - Теперь с автообновляемыми подписками и тюнингом скорости!
+v5.0 — Ultra-Fast Install, VDS Auto-Tune, Автообновляемые подписки!

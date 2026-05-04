@@ -1,5 +1,15 @@
 ﻿# CHANGELOG - NaiveProxy Panel
 
+## 2026-05-04 15:53:39 UTC - 662afa60
+
+- Author: Koda AI
+- Message: Merge v5.0
+- Commit: https://github.com/kayucm21/3Dpovaw/commit/662afa607894fba641dbfc76cffa1f86b66e28cc
+
+### Changed files
+
+
+
 ## 2026-05-04 - Глобальное обновление v5.0 — Ultra-Fast Install & VDS Auto-Tune
 
 ### ✨ Новые функции v5.0

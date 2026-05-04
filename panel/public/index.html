@@ -73,6 +73,11 @@
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
         <span>Установка</span>
       </a>
+      <a href="#" class="nav-item" data-page="subscriptions">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        <span>Подписки</span>
+        <span class="notification-badge" id="subBadge" style="display:none">NEW</span>
+      </a>
       <a href="#" class="nav-item" data-page="users">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
         <span>Пользователи</span>
@@ -641,3 +646,101 @@
 </script>
 </body>
 </html>
+
+    <!-- SUBSCRIPTIONS PAGE (v4.0) -->
+    <div id="subscriptionsPage" class="page-content hidden">
+      <div class="page-header">
+        <h1 class="page-title">Подписки VLESS</h1>
+        <button class="btn btn-primary" onclick="showCreateSubModal()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Создать
+        </button>
+      </div>
+
+      <div class="chart-container">
+        <div style="overflow-x: auto;">
+          <table style="width: 100%; border-collapse: collapse;" id="subscriptionsTable">
+            <thead>
+              <tr style="border-bottom: 1px solid var(--border);">
+                <th style="text-align: left; padding: 12px; font-size: 13px; color: var(--text-secondary);">Пользователь</th>
+                <th style="text-align: left; padding: 12px; font-size: 13px; color: var(--text-secondary);">Ссылка</th>
+                <th style="text-align: left; padding: 12px; font-size: 13px; color: var(--text-secondary);">QR</th>
+                <th style="text-align: left; padding: 12px; font-size: 13px; color: var(--text-secondary);">Истекает</th>
+                <th style="text-align: left; padding: 12px; font-size: 13px; color: var(--text-secondary);">Статус</th>
+                <th style="text-align: right; padding: 12px; font-size: 13px; color: var(--text-secondary);">Действия</th>
+              </tr>
+            </thead>
+            <tbody id="subscriptionsTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="chart-container" style="margin-top: 20px;">
+        <h3 style="margin-bottom: 15px;">📱 Как использовать подписку</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">
+          <div style="padding: 15px; background: var(--bg-input); border-radius: var(--radius);">
+            <div style="font-weight: 600; margin-bottom: 8px;">🔗 Karing (iOS/macOS)</div>
+            <div style="font-size: 13px; color: var(--text-secondary);">1. Откройте Karing<br>2. Нажмите "+" → "Добавить подписку"<br>3. Вставьте ссылку или отсканируйте QR</div>
+          </div>
+          <div style="padding: 15px; background: var(--bg-input); border-radius: var(--radius);">
+            <div style="font-weight: 600; margin-bottom: 8px;">📱 v2rayNG (Android)</div>
+            <div style="font-size: 13px; color: var(--text-secondary);">1. Откройте v2rayNG<br>2. Нажмите "+" → "Импортировать из URL"<br>3. Вставьте ссылку подписки</div>
+          </div>
+          <div style="padding: 15px; background: var(--bg-input); border-radius: var(--radius);">
+            <div style="font-weight: 600; margin-bottom: 8px;">📲 Shadowrocket (iOS)</div>
+            <div style="font-size: 13px; color: var(--text-secondary);">1. Откройте Shadowrocket<br>2. Нажмите "+" → "Add Subscription"<br>3. Вставьте ссылку</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CREATE SUBSCRIPTION MODAL -->
+    <div id="createSubModal" class="modal hidden" style="position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 9999; display: none; align-items: center; justify-content: center;">
+      <div class="login-card" style="max-width: 450px;">
+        <h2 style="margin-bottom: 20px;">Создать подписку</h2>
+        <form id="createSubForm">
+          <div class="form-group">
+            <label class="form-label">Пользователь</label>
+            <select id="subUsername" class="form-input" required></select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Срок действия (дней)</label>
+            <select id="subExpires" class="form-input">
+              <option value="">Бессрочно</option>
+              <option value="7">7 дней</option>
+              <option value="30">30 дней</option>
+              <option value="90">90 дней</option>
+              <option value="365">365 дней</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Лимит трафика (GB)</label>
+            <input type="number" id="subTraffic" class="form-input" placeholder="0 = без лимита">
+          </div>
+          <div style="display: flex; gap: 10px; margin-top: 20px;">
+            <button type="submit" class="btn btn-primary btn-full">Создать</button>
+            <button type="button" class="btn btn-shiny" onclick="closeCreateSubModal()">Отмена</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- SUBSCRIPTION QR MODAL -->
+    <div id="subQRModal" class="modal hidden" style="position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 9999; display: none; align-items: center; justify-content: center;">
+      <div class="login-card" style="max-width: 400px;">
+        <h2 style="margin-bottom: 20px;">Ваша подписка</h2>
+        <div class="qr-code-container">
+          <div class="qr-code" id="subQrImage" style="background: white; padding: 10px; border-radius: 8px;">
+            <img id="qrCodeImg" src="" alt="QR Code" style="width: 180px; height: 180px;">
+          </div>
+          <div style="margin-top: 15px; width: 100%;">
+            <label class="form-label">Ссылка подписки</label>
+            <div style="display: flex; gap: 8px;">
+              <code id="subLinkText" style="flex: 1; background: var(--bg-input); padding: 8px; border-radius: 6px; font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">https://...</code>
+              <button class="btn btn-sm" onclick="copySubLink()">Копировать</button>
+            </div>
+          </div>
+        </div>
+        <button class="btn btn-primary btn-full" onclick="document.getElementById('subQRModal').style.display='none'">Закрыть</button>
+      </div>
+    </div>

@@ -964,3 +964,142 @@ async function loadLogs() {
 async function loadSettings() {
   // Already defined above
 }
+
+// ═══════════════════════════════════════════════════════════════
+// V4.0 — ПОДПИСКИ (SUBSCRIPTIONS)
+// ═══════════════════════════════════════════════════════════════
+
+// Загрузка страницы подписок
+async function loadSubscriptions() {
+  try {
+    const res = await fetch('/api/subscriptions');
+    if (res.ok) {
+      const subs = await res.json();
+      renderSubscriptionsTable(subs);
+    }
+  } catch (e) {
+    console.error('Failed to load subscriptions:', e);
+  }
+}
+
+function renderSubscriptionsTable(subs) {
+  const tbody = document.getElementById('subscriptionsTableBody');
+  if (!tbody) return;
+
+  if (subs.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 20px; color: var(--text-secondary);">Нет активных подписок</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = subs.map(sub => `
+    <tr style="border-bottom: 1px solid var(--border); ${sub.active ? '' : 'opacity: 0.5;'}">
+      <td style="padding: 12px;">${escapeHtml(sub.username)}</td>
+      <td style="padding: 12px;"><code style="background: var(--bg-input); padding: 4px 8px; border-radius: 4px; font-size: 11px;">${sub.url}</code></td>
+      <td style="padding: 12px;">
+        <button class="btn btn-sm" onclick="showSubQR('${sub.token}', '${sub.url}')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        </button>
+      </td>
+      <td style="padding: 12px;">${sub.expiresAt ? new Date(sub.expiresAt).toLocaleDateString('ru-RU') : '∞'}</td>
+      <td style="padding: 12px;">
+        <span class="platform-badge platform-${sub.active ? 'android' : 'unknown'}">${sub.active ? 'Активна' : 'Истекла'}</span>
+      </td>
+      <td style="padding: 12px; text-align: right;">
+        <button class="btn-icon" onclick="copySubLink('${sub.url}')" title="Копировать">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        </button>
+        <button class="btn-icon" onclick="deleteSubscription('${sub.id}')" title="Удалить" style="color: var(--danger);">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+        </button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function showCreateSubModal() {
+  document.getElementById('createSubModal').style.display = 'flex';
+  loadUsersForDropdown();
+}
+
+function closeCreateSubModal() {
+  document.getElementById('createSubModal').style.display = 'none';
+}
+
+async function loadUsersForDropdown() {
+  try {
+    const res = await fetch('/api/users');
+    if (res.ok) {
+      const users = await res.json();
+      const select = document.getElementById('subUsername');
+      select.innerHTML = users.map(u => `<option value="${escapeHtml(u.username)}">${escapeHtml(u.username)} (${u.protocol || 'naive'})</option>`).join('');
+    }
+  } catch {}
+}
+
+document.getElementById('createSubForm')?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = e.target.querySelector('button[type="submit"]');
+  btn.disabled = true;
+
+  const data = {
+    username: document.getElementById('subUsername').value,
+    expiresDays: parseInt(document.getElementById('subExpires').value) || null,
+    trafficLimit: parseInt(document.getElementById('subTraffic').value) || null
+  };
+
+  try {
+    const res = await fetch('/api/subscriptions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+
+    if (res.ok) {
+      const result = await res.json();
+      showToast('Подписка создана!', 'success');
+      closeCreateSubModal();
+      loadSubscriptions();
+      showSubQR(result.subscription.token, result.subscription.url);
+    } else {
+      showToast('Ошибка создания', 'error');
+    }
+  } catch {
+    showToast('Ошибка соединения', 'error');
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+function showSubQR(token, url) {
+  const qrImg = document.getElementById('qrCodeImg');
+  qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(url)}`;
+  document.getElementById('subLinkText').textContent = url;
+  document.getElementById('subQRModal').style.display = 'flex';
+}
+
+function copySubLink(url) {
+  navigator.clipboard.writeText(url);
+  showToast('Ссылка скопирована', 'success');
+}
+
+async function deleteSubscription(id) {
+  if (!confirm('Удалить подписку?')) return;
+  try {
+    const res = await fetch(`/api/subscriptions/${id}`, { method: 'DELETE' });
+    if (res.ok) {
+      showToast('Подписка удалена', 'success');
+      loadSubscriptions();
+    }
+  } catch {
+    showToast('Ошибка', 'error');
+  }
+}
+
+// Обновление навигации для подписок
+const oldGoToPage = window.goToPage;
+window.goToPage = function(page) {
+  oldGoToPage(page);
+  if (page === 'subscriptions') {
+    loadSubscriptions();
+  }
+};

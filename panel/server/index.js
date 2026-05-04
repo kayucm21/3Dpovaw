@@ -1646,3 +1646,204 @@ app.delete('/api/logs', requireAuth, (req, res) => { try { fs.writeFileSync(CONN
 // PASSWORD CHANGE
 app.post('/api/password', requireAuth, async (req, res) => { try { const { currentPassword, newPassword } = req.body; const config = loadConfig(); const users = fs.existsSync(USERS_FILE) ? JSON.parse(fs.readFileSync(USERS_FILE, 'utf8')) : [{ username: 'admin', password: config.adminPassword }]; const user = users.find(u => u.username === req.user.username); if (!user) return res.status(404).json({ error: 'User not found' }); const bcrypt = require('bcryptjs'); const valid = await bcrypt.compare(currentPassword, user.password); if (!valid) return res.status(401).json({ error: 'Current password incorrect' }); const hashed = await bcrypt.hash(newPassword, 10); user.password = hashed; fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2)); res.json({ success: true }); } catch { res.status(500).json({ error: 'Password change failed' }); } });
 
+
+// ═══════════════════════════════════════════════════════════════
+// V4.0 — ПОДПИСКИ VLESS И ТЮНИНГ
+// ═══════════════════════════════════════════════════════════════
+
+const SUBSCRIPTIONS_FILE = path.join(__dirname, '../data/subscriptions.json');
+const TRAFFIC_FILE = path.join(__dirname, '../data/traffic.json');
+
+// Генерация токена подписки
+function generateSubToken() {
+  return crypto.randomBytes(16).toString('hex');
+}
+
+// Загрузка подписок
+function loadSubscriptions() {
+  if (!fs.existsSync(SUBSCRIPTIONS_FILE)) return [];
+  try { return JSON.parse(fs.readFileSync(SUBSCRIPTIONS_FILE, 'utf8')); } catch { return []; }
+}
+
+// Сохранение подписок
+function saveSubscriptions(subs) {
+  fs.writeFileSync(SUBSCRIPTIONS_FILE, JSON.stringify(subs, null, 2));
+}
+
+// Загрузка трафика
+function loadTraffic() {
+  if (!fs.existsSync(TRAFFIC_FILE)) return {};
+  try { return JSON.parse(fs.readFileSync(TRAFFIC_FILE, 'utf8')); } catch { return {}; }
+}
+
+// Сохранение трафика
+function saveTraffic(traffic) {
+  fs.writeFileSync(TRAFFIC_FILE, JSON.stringify(traffic, null, 2));
+}
+
+// Генерация VLESS ссылки
+function buildVlessLink(user, config) {
+  const port = Number(config.vlessPort) || 443;
+  const encodedName = encodeURIComponent(user.username || 'vless-user');
+  const wsPath = encodeURIComponent(config.vlessWsPath || '/vless');
+  const host = config.domain;
+  return `vless://${user.password}@${host}:${port}?encryption=none&security=tls&type=ws&host=${host}&sni=${host}&path=${wsPath}#${encodedName}`;
+}
+
+// Генерация подписки в формате для приложений
+function generateSubscriptionContent(token, config) {
+  const subs = loadSubscriptions();
+  const sub = subs.find(s => s.token === token);
+  if (!sub || sub.blocked || (sub.expiresAt && new Date(sub.expiresAt) < new Date())) {
+    return '';
+  }
+  
+  const users = config.proxyUsers || [];
+  const links = users
+    .filter(u => normalizeProtocol(u.protocol) === 'vless')
+    .map(u => buildVlessLink(u, config));
+  
+  return links.join('\n');
+}
+
+// API: Список подписок
+app.get('/api/subscriptions', requireAuth, (req, res) => {
+  const subs = loadSubscriptions();
+  res.json(subs.map(s => ({
+    id: s.id,
+    username: s.username,
+    token: s.token,
+    url: `${req.protocol}://${req.get('host')}/sub/${s.token}`,
+    createdAt: s.createdAt,
+    expiresAt: s.expiresAt,
+    trafficLimit: s.trafficLimit,
+    trafficUsed: s.trafficUsed || 0,
+    blocked: s.blocked || false,
+    active: !s.blocked && (!s.expiresAt || new Date(s.expiresAt) > new Date())
+  })));
+});
+
+// API: Создание подписки
+app.post('/api/subscriptions', requireAuth, (req, res) => {
+  try {
+    const { username, expiresDays, trafficLimit } = req.body;
+    const config = loadConfig();
+    
+    const user = (config.proxyUsers || []).find(u => u.username === username);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    
+    const subs = loadSubscriptions();
+    const existing = subs.find(s => s.username === username);
+    if (existing) {
+      return res.json({
+        success: true,
+        subscription: {
+          id: existing.id,
+          token: existing.token,
+          url: `${req.protocol}://${req.get('host')}/sub/${existing.token}`,
+          qrUrl: `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(`${req.protocol}://${req.get('host')}/sub/${existing.token}`)}`
+        }
+      });
+    }
+    
+    const token = generateSubToken();
+    const expiresAt = expiresDays ? new Date(Date.now() + expiresDays * 86400000).toISOString() : null;
+    
+    const newSub = {
+      id: crypto.randomUUID(),
+      username,
+      token,
+      createdAt: new Date().toISOString(),
+      expiresAt,
+      trafficLimit: trafficLimit ? parseInt(trafficLimit) * 1024 * 1024 * 1024 : null, // GB to bytes
+      trafficUsed: 0,
+      blocked: false
+    };
+    
+    subs.push(newSub);
+    saveSubscriptions(subs);
+    
+    res.json({
+      success: true,
+      subscription: {
+        id: newSub.id,
+        token: newSub.token,
+        url: `${req.protocol}://${req.get('host')}/sub/${newSub.token}`,
+        qrUrl: `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(`${req.protocol}://${req.get('host')}/sub/${newSub.token}`)}`
+      }
+    });
+  } catch {
+    res.status(500).json({ error: 'Failed to create subscription' });
+  }
+});
+
+// API: Удаление подписки
+app.delete('/api/subscriptions/:id', requireAuth, (req, res) => {
+  try {
+    const subs = loadSubscriptions();
+    const filtered = subs.filter(s => s.id !== req.params.id);
+    saveSubscriptions(filtered);
+    res.json({ success: true });
+  } catch {
+    res.status(500).json({ error: 'Failed to delete subscription' });
+  }
+});
+
+// API: Продление подписки
+app.post('/api/subscriptions/:id/renew', requireAuth, (req, res) => {
+  try {
+    const { days } = req.body;
+    const subs = loadSubscriptions();
+    const sub = subs.find(s => s.id === req.params.id);
+    if (!sub) return res.status(404).json({ error: 'Subscription not found' });
+    
+    sub.expiresAt = new Date(Date.now() + (days || 30) * 86400000).toISOString();
+    saveSubscriptions(subs);
+    res.json({ success: true, expiresAt: sub.expiresAt });
+  } catch {
+    res.status(500).json({ error: 'Failed to renew subscription' });
+  }
+});
+
+// ПУБЛИЧНЫЙ API: Получение подписки (для клиентских приложений)
+app.get('/sub/:token', (req, res) => {
+  try {
+    const config = loadConfig();
+    const content = generateSubscriptionContent(req.params.token, config);
+    
+    if (!content) {
+      return res.status(403).send('# Subscription expired or blocked');
+    }
+    
+    // Учёт трафика
+    const traffic = loadTraffic();
+    traffic[req.params.token] = (traffic[req.params.token] || 0) + 1;
+    saveTraffic(traffic);
+    
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+    res.setHeader('Content-Disposition', 'inline');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Subscription-Userinfo', `upload=0; download=0; total=0; expire=0`);
+    res.send(content);
+  } catch {
+    res.status(500).send('# Error');
+  }
+});
+
+// API: Статистика трафика
+app.get('/api/traffic/:token', requireAuth, (req, res) => {
+  try {
+    const traffic = loadTraffic();
+    const subs = loadSubscriptions();
+    const sub = subs.find(s => s.token === req.params.token);
+    res.json({
+      token: req.params.token,
+      requests: traffic[req.params.token] || 0,
+      trafficUsed: sub ? sub.trafficUsed : 0,
+      trafficLimit: sub ? sub.trafficLimit : null
+    });
+  } catch {
+    res.status(500).json({ error: 'Failed to load traffic' });
+  }
+});
+

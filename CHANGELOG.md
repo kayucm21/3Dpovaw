@@ -1,5 +1,15 @@
 ﻿# CHANGELOG - NaiveProxy Panel
 
+## 2026-05-04 16:13:39 UTC - a6d7863b
+
+- Author: Koda AI
+- Message: Merge v6.0
+- Commit: https://github.com/kayucm21/3Dpovaw/commit/a6d7863bd8a338a393dce51027107c78260dd557
+
+### Changed files
+
+
+
 ## 2026-05-04 - Глобальное обновление v6.0 — Reality Шифрование + SNI Маскировка + Скрипты
 
 ### ✨ Новые функции v6.0

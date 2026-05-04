@@ -1,5 +1,15 @@
 ﻿# CHANGELOG - NaiveProxy Panel
 
+## 2026-05-04 15:40:58 UTC - 2ec37236
+
+- Author: Koda AI
+- Message: Merge v4.0
+- Commit: https://github.com/kayucm21/3Dpovaw/commit/2ec372360e18c46efcebd84246be38e7483ad944
+
+### Changed files
+
+
+
 ## 2026-05-04 - Глобальное обновление v4.0 — Подписки VLESS и Тюнинг Скорости
 
 ### ✨ Новые функции v4.0

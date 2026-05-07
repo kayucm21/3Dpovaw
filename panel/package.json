@@ -1,0 +1,23 @@
+﻿{
+  "name": "naive-proxy-panel",
+  "version": "3.0.0",
+  "description": "Panel NaiveProxy v3.0 — современное управление NaiveProxy и VLESS через веб-интерфейс",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node server/index.js",
+    "postinstall": "bash scripts/post_update_finalize.sh"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "express-session": "^1.17.3",
+    "bcryptjs": "^2.4.3",
+    "node-pty": "^1.0.0",
+    "ws": "^8.14.2",
+    "cors": "^2.8.5",
+    "body-parser": "^1.20.2",
+    "fs-extra": "^11.1.1",
+    "speakeasy": "^2.0.0",
+    "qrcode": "^1.5.3"
+  }
+}

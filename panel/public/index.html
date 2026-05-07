@@ -1,0 +1,819 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="NaiveProxy Panel v3.0 - Панель управления NaiveProxy и VLESS">
+  <meta name="theme-color" content="#7c3aed">
+  <title>NaiveProxy Panel v3.0</title>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+<!-- THEME TOGGLE -->
+<button class="theme-toggle" id="themeToggle" title="Переключить тему">
+  <svg id="sunIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <circle cx="12" cy="12" r="5"/>
+    <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+  </svg>
+  <svg id="moonIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none">
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+  </svg>
+</button>
+
+<!-- PWA INSTALL BUTTON -->
+<button class="pwa-install-btn" id="pwaInstallBtn">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+    <polyline points="7 10 12 15 17 10"/>
+    <line x1="12" y1="15" x2="12" y2="3"/>
+  </svg>
+  Установить приложение
+</button><!-- MAIN APP -->
+<div id="app" class="app hidden">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon small">
+        <img src="/assets/logo.png" alt="Logo" style="width:24px;height:24px;object-fit:contain;border-radius:4px;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+        <div style="display:none;align-items:center;justify-content:center;">
+          <svg width="24" height="24" viewBox="0 0 36 36" fill="none">
+            <circle cx="18" cy="18" r="17" stroke="url(#grad2)" stroke-width="2"/>
+            <path d="M10 18C10 13.58 13.58 10 18 10C22.42 10 26 13.58 26 18" stroke="url(#grad2)" stroke-width="2" stroke-linecap="round"/>
+            <circle cx="18" cy="18" r="4" fill="url(#grad2)"/>
+            <defs><linearGradient id="grad2" x1="0" y1="0" x2="36" y2="36" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#7C3AED"/><stop offset="100%" stop-color="#3B82F6"/></linearGradient></defs>
+          </svg>
+        </div>
+      </div>
+      <div>
+        <div class="sidebar-title">NaiveProxy</div>
+        <div class="sidebar-sub">v3.0</div>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a href="#" class="nav-item active" data-page="dashboard">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        <span>Дашборд</span>
+      </a>
+      <a href="#" class="nav-item" data-page="analytics">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        <span>Аналитика</span>
+      </a>
+      <a href="#" class="nav-item" data-page="resources">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        <span>Ресурсы</span>
+      </a>
+      <a href="#" class="nav-item" data-page="install">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
+        <span>Установка</span>
+      </a>
+      <a href="#" class="nav-item" data-page="subscriptions">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        <span>Подписки</span>
+        <span class="notification-badge" id="subBadge" style="display:none">NEW</span>
+      </a>
+      <a href="#" class="nav-item" data-page="users">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <span>Пользователи</span>
+      </a>
+      <a href="#" class="nav-item" data-page="devices">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        <span>Устройства</span>
+      </a>
+      <a href="#" class="nav-item" data-page="logs">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        <span>Логи</span>
+      </a>
+      <a href="#" class="nav-item" data-page="sni">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        <span>SNI Whitelist</span>
+        <span class="notification-badge" id="sniBadge" style="display:none">NEW</span>
+      </a>
+      <a href="#" class="nav-item" data-page="security">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <span>Безопасность</span>
+      </a>
+      <a href="#" class="nav-item" data-page="settings">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M5.34 18.66l-1.41 1.41M21 12h-2M5 12H3M19.07 19.07l-1.41-1.41M5.34 5.34L3.93 3.93M12 21v-2M12 5V3"/></svg>
+        <span>Настройки</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-bottom">
+      <div class="user-info">
+        <div class="user-avatar" id="sidebarUserAvatar">A</div>
+        <div>
+          <div class="user-name" id="sidebarUsername">admin</div>
+          <div class="user-role">Administrator</div>
+        </div>
+      </div>
+      <button class="btn-icon logout-btn" id="logoutBtn" title="Выйти">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content">
+
+    <!-- DASHBOARD PAGE -->
+    <div id="dashboardPage" class="page-content">
+      <div class="page-header">
+        <h1 class="page-title">Дашборд</h1>
+        <button class="btn btn-primary" id="refreshDashboardBtn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+          Обновить
+        </button>
+      </div>
+
+      <!-- Analytics Cards -->
+      <div class="analytics-grid">
+        <div class="analytics-card">
+          <div class="analytics-value" id="totalUsers">0</div>
+          <div class="analytics-label">Всего пользователей</div>
+        </div>
+        <div class="analytics-card">
+          <div class="analytics-value" id="activeDevices">0</div>
+          <div class="analytics-label">Активные устройства</div>
+        </div>
+        <div class="analytics-card">
+          <div class="analytics-value" id="totalConnections">0</div>
+          <div class="analytics-label">Подключений сегодня</div>
+        </div>
+        <div class="analytics-card">
+          <div class="analytics-value" id="warpStatus">—</div>
+          <div class="analytics-label">WARP статус</div>
+        </div>
+      </div>
+
+      <!-- Charts -->
+      <div class="chart-container">
+        <div class="chart-header">
+          <div class="chart-title">Статистика подключений (7 дней)</div>
+        </div>
+        <canvas id="connectionsChart" class="chart-canvas"></canvas>
+      </div>
+
+      <!-- Resource Monitor -->
+      <div class="resource-monitor">
+        <div class="chart-header">
+          <div class="chart-title">Мониторинг ресурсов сервера</div>
+          <span class="resource-live-indicator">● Live</span>
+        </div>
+        <div class="resource-item">
+          <div class="resource-header">
+            <span class="resource-name">CPU</span>
+            <span class="resource-value" id="cpuValue">0%</span>
+          </div>
+          <div class="resource-bar">
+            <div class="resource-progress" id="cpuProgress" style="width: 0%"></div>
+          </div>
+        </div>
+        <div class="resource-item">
+          <div class="resource-header">
+            <span class="resource-name">RAM</span>
+            <span class="resource-value" id="ramValue">0%</span>
+          </div>
+          <div class="resource-bar">
+            <div class="resource-progress" id="ramProgress" style="width: 0%"></div>
+          </div>
+        </div>
+        <div class="resource-item">
+          <div class="resource-header">
+            <span class="resource-name">Диск</span>
+            <span class="resource-value" id="diskValue">0%</span>
+          </div>
+          <div class="resource-bar">
+            <div class="resource-progress" id="diskProgress" style="width: 0%"></div>
+          </div>
+        </div>
+        <div class="resource-item">
+          <div class="resource-header">
+            <span class="resource-name">Сеть (входящий)</span>
+            <span class="resource-value" id="networkInValue">0 KB/s</span>
+          </div>
+          <div class="resource-bar">
+            <div class="resource-progress" id="networkInProgress" style="width: 0%"></div>
+          </div>
+        </div>
+        <div class="resource-item">
+          <div class="resource-header">
+            <span class="resource-name">Сеть (исходящий)</span>
+            <span class="resource-value" id="networkOutValue">0 KB/s</span>
+          </div>
+          <div class="resource-bar">
+            <div class="resource-progress" id="networkOutProgress" style="width: 0%"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Server Info -->
+      <div class="chart-container">
+        <div class="chart-header">
+          <div class="chart-title">Информация о сервере</div>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+          <div>
+            <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px;">IP адрес</div>
+            <div style="font-size: 14px; font-weight: 500;" id="serverIp">—</div>
+          </div>
+          <div>
+            <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px;">Домен</div>
+            <div style="font-size: 14px; font-weight: 500;" id="serverDomain">—</div>
+          </div>
+          <div>
+            <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px;">Протокол</div>
+            <div style="font-size: 14px; font-weight: 500;" id="serverProtocol">—</div>
+          </div>
+          <div>
+            <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px;">Время работы</div>
+            <div style="font-size: 14px; font-weight: 500;" id="serverUptime">—</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECURITY PAGE (2FA) -->
+    <div id="securityPage" class="page-content hidden">
+      <div class="page-header">
+        <h1 class="page-title">Безопасность</h1>
+      </div>
+
+      <div class="chart-container">
+        <div class="chart-header">
+          <div class="chart-title">Двухфакторная аутентификация (2FA)</div>
+        </div>
+        
+        <div id="twoFaSetup">
+          <p style="margin-bottom: 20px; color: var(--text-secondary);">
+            Улучшите безопасность своего аккаунта, включив двухфакторную аутентификацию.
+          </p>
+          
+          <div id="qrSetup" class="hidden">
+            <div class="qr-code-container">
+              <div class="qr-code" id="qrCodeImage">
+                <img src="" alt="QR Code" style="width:100%;height:100%;">
+              </div>
+              <p style="text-align:center; color: var(--text-secondary); margin-bottom: 15px;">
+                Отсканируйте QR-код с помощью приложения Google Authenticator или Authy
+              </p>
+              <div class="verification-input" id="verificationInput">
+                <input type="text" maxlength="1" pattern="[0-9]" inputmode="numeric">
+                <input type="text" maxlength="1" pattern="[0-9]" inputmode="numeric">
+                <input type="text" maxlength="1" pattern="[0-9]" inputmode="numeric">
+                <input type="text" maxlength="1" pattern="[0-9]" inputmode="numeric">
+                <input type="text" maxlength="1" pattern="[0-9]" inputmode="numeric">
+                <input type="text" maxlength="1" pattern="[0-9]" inputmode="numeric">
+              </div>
+              <button class="btn btn-primary" id="verifyTwoFaBtn">Подтвердить</button>
+            </div>
+          </div>
+          
+          <div id="twoFaStatus">
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: 15px; background: var(--bg-input); border-radius: var(--radius-sm); margin-bottom: 15px;">
+              <div>
+                <div style="font-weight: 500;">Статус 2FA</div>
+                <div style="font-size: 13px; color: var(--text-secondary);" id="twoFaStatusText">Отключено</div>
+              </div>
+              <button class="btn btn-shiny" id="enableTwoFaBtn">Включить 2FA</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="chart-container">
+        <div class="chart-header">
+          <div class="chart-title">Смена пароля</div>
+        </div>
+        <form id="changePasswordForm">
+          <div class="form-group">
+            <label class="form-label">Текущий пароль</label>
+            <input type="password" id="currentPassword" class="form-input" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Новый пароль</label>
+            <input type="password" id="newPassword" class="form-input" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Подтвердите новый пароль</label>
+            <input type="password" id="confirmPassword" class="form-input" required>
+          </div>
+          <button type="submit" class="btn btn-primary">Сменить пароль</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- ANALYTICS PAGE -->
+    <div id="analyticsPage" class="page-content hidden">
+      <div class="page-header">
+        <h1 class="page-title">Аналитика</h1>
+      </div>
+
+      <div class="chart-container">
+        <div class="chart-header">
+          <div class="chart-title">Трафик за последние 24 часа</div>
+        </div>
+        <canvas id="trafficChart" class="chart-canvas"></canvas>
+      </div>
+
+      <div class="chart-container">
+        <div class="chart-header">
+          <div class="chart-title">Распределение по устройствам</div>
+        </div>
+        <canvas id="devicesChart" class="chart-canvas" style="height: 300px;"></canvas>
+      </div>
+
+      <div class="chart-container">
+        <div class="chart-header">
+          <div class="chart-title">Топ пользователей по активности</div>
+        </div>
+        <div id="topUsersList" style="margin-top: 15px;"></div>
+      </div>
+    </div>
+
+    <!-- RESOURCES PAGE -->
+    <div id="resourcesPage" class="page-content hidden">
+      <div class="page-header">
+        <h1 class="page-title">Мониторинг ресурсов</h1>
+        <button class="btn btn-primary" id="refreshResourcesBtn">Обновить</button>
+      </div>
+
+      <div class="resource-monitor">
+        <div class="chart-header">
+          <div class="chart-title">Текущее использование</div>
+          <span class="resource-live-indicator">● Live</span>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-top: 20px;">
+          <div class="analytics-card">
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 15px;">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+              <span style="font-weight: 600;">CPU</span>
+            </div>
+            <div style="font-size: 32px; font-weight: 700; color: var(--accent-bright);" id="cpuDetailed">0%</div>
+            <div style="font-size: 12px; color: var(--text-secondary); margin-top: 5px;" id="cpuCores">0 из 0 ядер</div>
+          </div>
+
+          <div class="analytics-card">
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 15px;">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent2)" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+              <span style="font-weight: 600;">RAM</span>
+            </div>
+            <div style="font-size: 32px; font-weight: 700; color: var(--accent2);" id="ramDetailed">0 GB</div>
+            <div style="font-size: 12px; color: var(--text-secondary); margin-top: 5px;" id="ramTotal">из 0 GB</div>
+          </div>
+
+          <div class="analytics-card">
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 15px;">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 12h8M12 8v8"/></svg>
+              <span style="font-weight: 600;">Диск</span>
+            </div>
+            <div style="font-size: 32px; font-weight: 700; color: #10b981;" id="diskDetailed">0 GB</div>
+            <div style="font-size: 12px; color: var(--text-secondary); margin-top: 5px;" id="diskTotal">из 0 GB</div>
+          </div>
+
+          <div class="analytics-card">
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 15px;">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+              <span style="font-weight: 600;">Uptime</span>
+            </div>
+            <div style="font-size: 32px; font-weight: 700; color: #f59e0b;" id="uptimeValue">—</div>
+            <div style="font-size: 12px; color: var(--text-secondary); margin-top: 5px;">с момента запуска</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="chart-container">
+        <div class="chart-header">
+          <div class="chart-title">История использования ресурсов (последний час)</div>
+        </div>
+        <canvas id="resourcesHistoryChart" class="chart-canvas"></canvas>
+      </div>
+    </div>
+
+    <!-- INSTALL PAGE -->
+    <div id="installPage" class="page-content hidden">
+      <div class="page-header">
+        <h1 class="page-title">Установка протокола</h1>
+      </div>
+
+      <div class="chart-container">
+        <div class="chart-header">
+          <div class="chart-title">Выберите протокол</div>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-top: 20px;">
+          <div class="analytics-card" id="naiveCard" style="cursor: pointer; border: 2px solid transparent;" onclick="selectProtocol('naive')">
+            <h3 style="margin-bottom: 10px;">NaiveProxy</h3>
+            <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 15px;">
+              Протокол с высокой степенью маскировки под обычный HTTPS трафик
+            </p>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+              <span class="platform-badge">Высокая скрытность</span>
+              <span class="platform-badge">TLS шифрование</span>
+            </div>
+          </div>
+          
+          <div class="analytics-card" id="vlessCard" style="cursor: pointer; border: 2px solid transparent;" onclick="selectProtocol('vless')">
+            <h3 style="margin-bottom: 10px;">VLESS + WebSocket</h3>
+            <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 15px;">
+              Современный протокол с WebSocket транспортом для обхода блокировок
+            </p>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+              <span class="platform-badge">Высокая скорость</span>
+              <span class="platform-badge">Гибкая настройка</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="chart-container">
+        <div class="chart-header">
+          <div class="chart-title">Настройки установки</div>
+        </div>
+        <form id="installForm">
+          <div class="form-group">
+            <label class="form-label">Домен</label>
+            <input type="text" id="installDomain" class="form-input" placeholder="proxy.yourdomain.com" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email для SSL сертификата</label>
+            <input type="email" id="installEmail" class="form-input" placeholder="admin@example.com" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Порт</label>
+            <input type="number" id="installPort" class="form-input" placeholder="443" value="443">
+          </div>
+          <div class="form-group hidden" id="vlessWsPathGroup">
+            <label class="form-label">WebSocket путь (для VLESS)</label>
+            <input type="text" id="installWsPath" class="form-input" placeholder="/vless" value="/vless">
+          </div>
+          <button type="submit" class="btn btn-primary btn-full" id="installBtn" disabled>
+            <span class="btn-text">Начать установку</span>
+            <span class="btn-loader hidden"><svg class="spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4"/><text x="10" y="14" font-size="10">...</text></svg></span>
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- USERS PAGE -->
+    <div id="usersPage" class="page-content hidden">
+      <div class="page-header">
+        <h1 class="page-title">Пользователи</h1>
+        <button class="btn btn-primary" id="addUserBtn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Добавить
+        </button>
+      </div>
+
+      <div class="chart-container">
+        <div style="overflow-x: auto;">
+          <table style="width: 100%; border-collapse: collapse;" id="usersTable">
+            <thead>
+              <tr style="border-bottom: 1px solid var(--border);">
+                <th style="text-align: left; padding: 12px; font-size: 13px; color: var(--text-secondary);">Имя</th>
+                <th style="text-align: left; padding: 12px; font-size: 13px; color: var(--text-secondary);">Протокол</th>
+                <th style="text-align: left; padding: 12px; font-size: 13px; color: var(--text-secondary);">Ссылка</th>
+                <th style="text-align: right; padding: 12px; font-size: 13px; color: var(--text-secondary);">Действия</th>
+              </tr>
+            </thead>
+            <tbody id="usersTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- DEVICES PAGE -->
+    <div id="devicesPage" class="page-content hidden">
+      <div class="page-header">
+        <h1 class="page-title">Устройства</h1>
+      </div>
+
+      <div class="chart-container">
+        <div style="overflow-x: auto;">
+          <table style="width: 100%; border-collapse: collapse;" id="devicesTable">
+            <thead>
+              <tr style="border-bottom: 1px solid var(--border);">
+                <th style="text-align: left; padding: 12px; font-size: 13px; color: var(--text-secondary);">Пользователь</th>
+                <th style="text-align: left; padding: 12px; font-size: 13px; color: var(--text-secondary);">Устройство</th>
+                <th style="text-align: left; padding: 12px; font-size: 13px; color: var(--text-secondary);">HWID</th>
+                <th style="text-align: left; padding: 12px; font-size: 13px; color: var(--text-secondary);">IP</th>
+                <th style="text-align: left; padding: 12px; font-size: 13px; color: var(--text-secondary);">Платформа</th>
+                <th style="text-align: left; padding: 12px; font-size: 13px; color: var(--text-secondary);">Последнее</th>
+                <th style="text-align: right; padding: 12px; font-size: 13px; color: var(--text-secondary);">Статус</th>
+              </tr>
+            </thead>
+            <tbody id="devicesTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- LOGS PAGE -->
+    <div id="logsPage" class="page-content hidden">
+      <div class="page-header">
+        <h1 class="page-title">Логи подключений</h1>
+        <button class="btn btn-shiny" id="clearLogsBtn">Очистить</button>
+      </div>
+
+      <div class="chart-container">
+        <div id="logsTerminal" style="font-family: var(--font-mono); font-size: 12px; max-height: 500px; overflow-y: auto;"></div>
+      </div>
+    </div>
+
+    <!-- SETTINGS PAGE -->
+    <div id="settingsPage" class="page-content hidden">
+      <div class="page-header">
+        <h1 class="page-title">Настройки</h1>
+      </div>
+
+      <div class="chart-container">
+        <div class="chart-header">
+          <div class="chart-title">WARP</div>
+        </div>
+        <div style="display: flex; align-items: center; justify-content: space-between; padding: 15px; background: var(--bg-input); border-radius: var(--radius-sm); margin-bottom: 15px;">
+          <div>
+            <div style="font-weight: 500;">WARP от Cloudflare</div>
+            <div style="font-size: 13px; color: var(--text-secondary);" id="warpSettingsStatus">Не установлено</div>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="warpToggle">
+            <span class="slider"></span>
+          </label>
+        </div>
+        <button class="btn btn-primary" id="installWarpBtn">Установить WARP</button>
+      </div>
+
+      <div class="chart-container">
+        <div class="chart-header">
+          <div class="chart-title">Discord уведомления</div>
+        </div>
+        <form id="discordSettingsForm">
+          <div class="form-group">
+            <label class="form-label">Webhook URL</label>
+            <input type="text" id="discordWebhook" class="form-input" placeholder="https://discord.com/api/webhooks/...">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Интервал (сек)</label>
+            <input type="number" id="discordInterval" class="form-input" value="300">
+          </div>
+          <label style="display: flex; align-items: center; gap: 8px; margin: 15px 0;">
+            <input type="checkbox" id="discordEnabled">
+            <span>Включить уведомления</span>
+          </label>
+          <button type="submit" class="btn btn-primary">Сохранить</button>
+        </form>
+      </div>
+
+      <div class="chart-container">
+        <div class="chart-header">
+          <div class="chart-title">Резервное копирование</div>
+        </div>
+        <div style="display: flex; gap: 10px;">
+          <button class="btn btn-primary" id="backupBtn">Создать бэкап</button>
+          <button class="btn btn-shiny" id="restoreBtn">Восстановить</button>
+        </div>
+        <div id="backupStatus" style="margin-top: 10px; font-size: 13px; color: var(--text-secondary);"></div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Toast Notifications -->
+<div id="toastContainer" style="position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; gap: 10px;"></div>
+
+<script src="/js/app.js"></script>
+<script>
+  // Theme toggle
+  const themeToggle = document.getElementById('themeToggle');
+  const sunIcon = document.getElementById('sunIcon');
+  const moonIcon = document.getElementById('moonIcon');
+  
+  function initTheme() {
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    updateThemeIcons(savedTheme);
+  }
+  
+  function updateThemeIcons(theme) {
+    if (theme === 'light') {
+      sunIcon.style.display = 'none';
+      moonIcon.style.display = 'block';
+    } else {
+      sunIcon.style.display = 'block';
+      moonIcon.style.display = 'none';
+    }
+  }
+  
+  themeToggle.addEventListener('click', () => {
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+    updateThemeIcons(newTheme);
+  });
+  
+  initTheme();
+
+  // PWA Install
+  let deferredPrompt;
+  const pwaInstallBtn = document.getElementById('pwaInstallBtn');
+  
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    pwaInstallBtn.style.display = 'flex';
+  });
+  
+  pwaInstallBtn.addEventListener('click', async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        pwaInstallBtn.style.display = 'none';
+      }
+      deferredPrompt = null;
+    }
+  });
+
+  // Register Service Worker
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js')
+      .then(reg => console.log('SW registered:', reg))
+      .catch(err => console.log('SW registration failed:', err));
+  }
+</script>
+</body>
+</html>
+
+    <!-- SUBSCRIPTIONS PAGE (v4.0) -->
+    <div id="subscriptionsPage" class="page-content hidden">
+      <div class="page-header">
+        <h1 class="page-title">Подписки VLESS</h1>
+        <button class="btn btn-primary" onclick="showCreateSubModal()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Создать
+        </button>
+      </div>
+
+      <div class="chart-container">
+        <div style="overflow-x: auto;">
+          <table style="width: 100%; border-collapse: collapse;" id="subscriptionsTable">
+            <thead>
+              <tr style="border-bottom: 1px solid var(--border);">
+                <th style="text-align: left; padding: 12px; font-size: 13px; color: var(--text-secondary);">Пользователь</th>
+                <th style="text-align: left; padding: 12px; font-size: 13px; color: var(--text-secondary);">Ссылка</th>
+                <th style="text-align: left; padding: 12px; font-size: 13px; color: var(--text-secondary);">QR</th>
+                <th style="text-align: left; padding: 12px; font-size: 13px; color: var(--text-secondary);">Истекает</th>
+                <th style="text-align: left; padding: 12px; font-size: 13px; color: var(--text-secondary);">Статус</th>
+                <th style="text-align: right; padding: 12px; font-size: 13px; color: var(--text-secondary);">Действия</th>
+              </tr>
+            </thead>
+            <tbody id="subscriptionsTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="chart-container" style="margin-top: 20px;">
+        <h3 style="margin-bottom: 15px;">📱 Как использовать подписку</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">
+          <div style="padding: 15px; background: var(--bg-input); border-radius: var(--radius);">
+            <div style="font-weight: 600; margin-bottom: 8px;">🔗 Karing (iOS/macOS)</div>
+            <div style="font-size: 13px; color: var(--text-secondary);">1. Откройте Karing<br>2. Нажмите "+" → "Добавить подписку"<br>3. Вставьте ссылку или отсканируйте QR</div>
+          </div>
+          <div style="padding: 15px; background: var(--bg-input); border-radius: var(--radius);">
+            <div style="font-weight: 600; margin-bottom: 8px;">📱 v2rayNG (Android)</div>
+            <div style="font-size: 13px; color: var(--text-secondary);">1. Откройте v2rayNG<br>2. Нажмите "+" → "Импортировать из URL"<br>3. Вставьте ссылку подписки</div>
+          </div>
+          <div style="padding: 15px; background: var(--bg-input); border-radius: var(--radius);">
+            <div style="font-weight: 600; margin-bottom: 8px;">📲 Shadowrocket (iOS)</div>
+            <div style="font-size: 13px; color: var(--text-secondary);">1. Откройте Shadowrocket<br>2. Нажмите "+" → "Add Subscription"<br>3. Вставьте ссылку</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CREATE SUBSCRIPTION MODAL -->
+    <div id="createSubModal" class="modal hidden" style="position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 9999; display: none; align-items: center; justify-content: center;">
+      <div class="login-card" style="max-width: 450px;">
+        <h2 style="margin-bottom: 20px;">Создать подписку</h2>
+        <form id="createSubForm">
+          <div class="form-group">
+            <label class="form-label">Пользователь</label>
+            <select id="subUsername" class="form-input" required></select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Срок действия (дней)</label>
+            <select id="subExpires" class="form-input">
+              <option value="">Бессрочно</option>
+              <option value="7">7 дней</option>
+              <option value="30">30 дней</option>
+              <option value="90">90 дней</option>
+              <option value="365">365 дней</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Лимит трафика (GB)</label>
+            <input type="number" id="subTraffic" class="form-input" placeholder="0 = без лимита">
+          </div>
+          <div style="display: flex; gap: 10px; margin-top: 20px;">
+            <button type="submit" class="btn btn-primary btn-full">Создать</button>
+            <button type="button" class="btn btn-shiny" onclick="closeCreateSubModal()">Отмена</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- SUBSCRIPTION QR MODAL -->
+    <div id="subQRModal" class="modal hidden" style="position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 9999; display: none; align-items: center; justify-content: center;">
+      <div class="login-card" style="max-width: 400px;">
+        <h2 style="margin-bottom: 20px;">Ваша подписка</h2>
+        <div class="qr-code-container">
+          <div class="qr-code" id="subQrImage" style="background: white; padding: 10px; border-radius: 8px;">
+            <img id="qrCodeImg" src="" alt="QR Code" style="width: 180px; height: 180px;">
+          </div>
+          <div style="margin-top: 15px; width: 100%;">
+            <label class="form-label">Ссылка подписки</label>
+            <div style="display: flex; gap: 8px;">
+              <code id="subLinkText" style="flex: 1; background: var(--bg-input); padding: 8px; border-radius: 6px; font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">https://...</code>
+              <button class="btn btn-sm" onclick="copySubLink()">Копировать</button>
+            </div>
+          </div>
+        </div>
+        <button class="btn btn-primary btn-full" onclick="document.getElementById('subQRModal').style.display='none'">Закрыть</button>
+      </div>
+    </div>
+
+    <!-- SNI WHITELIST PAGE (v6.0) -->
+    <div id="sniPage" class="page-content hidden">
+      <div class="page-header">
+        <h1 class="page-title">SNI Whitelist</h1>
+        <div style="display: flex; gap: 10px; align-items: center;">
+          <label class="switch" style="margin: 0;">
+            <input type="checkbox" id="sniToggle" onchange="toggleSNI()">
+            <span class="slider"></span>
+          </label>
+          <span id="sniStatusText" style="font-size: 13px; color: var(--text-secondary);">Выключено</span>
+        </div>
+      </div>
+
+      <div class="chart-container">
+        <h3 style="margin-bottom: 15px;">🔍 Поиск и добавление домена</h3>
+        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+          <input type="text" id="sniSearchInput" class="form-input" placeholder="Введите домен (например: cloudflare.com)" style="flex: 1;">
+          <button class="btn btn-primary" onclick="searchSNIDomain()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            Поиск
+          </button>
+        </div>
+        <div id="sniSearchResults" style="display: none;"></div>
+      </div>
+
+      <div class="chart-container" style="margin-top: 20px;">
+        <h3 style="margin-bottom: 15px;">📋 Белый список доменов</h3>
+        <div id="sniDomainsList" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
+        <div id="sniEmptyState" style="text-align: center; padding: 30px; color: var(--text-secondary);">
+          Нет доменов в белом списке. Добавьте через поиск выше.
+        </div>
+      </div>
+
+      <div class="chart-container" style="margin-top: 20px;">
+        <h3 style="margin-bottom: 15px;">⭐ Популярные домены (быстрое добавление)</h3>
+        <div id="sniPresets" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px;"></div>
+      </div>
+
+      <div class="chart-container" style="margin-top: 20px;">
+        <h3 style="margin-bottom: 15px;">📝 История поиска</h3>
+        <div style="overflow-x: auto;">
+          <table style="width: 100%; border-collapse: collapse;" id="sniSearchLogTable">
+            <thead>
+              <tr style="border-bottom: 1px solid var(--border);">
+                <th style="text-align: left; padding: 10px; font-size: 12px; color: var(--text-secondary);">Домен</th>
+                <th style="text-align: left; padding: 10px; font-size: 12px; color: var(--text-secondary);">DNS</th>
+                <th style="text-align: left; padding: 10px; font-size: 12px; color: var(--text-secondary);">HTTP</th>
+                <th style="text-align: left; padding: 10px; font-size: 12px; color: var(--text-secondary);">Время</th>
+              </tr>
+            </thead>
+            <tbody id="sniSearchLogBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="chart-container" style="margin-top: 20px;">
+        <h3 style="margin-bottom: 10px;">ℹ️ Что такое SNI Whitelist?</h3>
+        <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.6;">
+          SNI (Server Name Indication) — это расширение TLS, которое позволяет указать имя хоста при установлении защищённого соединения.
+          Белый список SNI помогает замаскировать трафик под легитимные сайты (Cloudflare, Microsoft, Apple, etc.),
+          что делает практически невозможным определение того, что вы используете прокси.
+          <br><br>
+          <strong>Как работает:</strong> Xray с Reality использует домены из белого списка как "маскировочные" SNI.
+          Провайдер видит только соединение с обычным сайтом (например, Cloudflare), а не с прокси-сервером.
+        </p>
+      </div>
+    </div>

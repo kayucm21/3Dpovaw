@@ -1,5 +1,23 @@
 ﻿# CHANGELOG - NaiveProxy Panel
 
+## 2026-05-08 15:20:42 UTC - 8825555d
+
+- Author: kayucm21
+- Message: v7.0 VDS Каскад + Оптимизация скорости
+- Commit: https://github.com/kayucm21/3Dpovaw/commit/8825555dbdef558ace483856c1eac0625d3333da
+
+### Changed files
+
+- `CHANGELOG.md`
+- `README.md`
+- `panel/package-lock.json`
+- `panel/package.json`
+- `panel/public/index.html`
+- `panel/public/js/app.js`
+- `panel/server/index.js`
+- `panel/server/vds.js`
+
+
 ## 2026-05-04 — Глобальное обновление v7.0 — VDS Каскад + Оптимизация скорости
 
 ### ✨ Новые функции v7.0

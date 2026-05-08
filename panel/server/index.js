@@ -10,6 +10,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const os = require('os');
+const vds = require('./vds');
 
 const app = express();
 const server = http.createServer(app);
@@ -1528,6 +1529,116 @@ app.post('/api/warp/toggle', requireAuth, async (req, res) => {
 });
 
 // ─────────────────────────────────────────────
+//  VDS / CASCADE SERVER ROUTES (v4.0)
+// ─────────────────────────────────────────────
+app.get('/api/vds/status', requireAuth, (req, res) => {
+  try {
+    res.json({ success: true, ...vds.getStatus() });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
+  }
+});
+
+app.post('/api/vds/servers', requireAuth, (req, res) => {
+  try {
+    const { host, port, password, username, label } = req.body;
+    if (!host || !password) return res.status(400).json({ success: false, message: 'IP и пароль обязательны' });
+    const server = vds.addServer({ host, port: Number(port) || 22, password, username: username || 'root', label: label || host });
+    res.json({ success: true, server });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
+  }
+});
+
+app.delete('/api/vds/servers/:id', requireAuth, (req, res) => {
+  try {
+    vds.removeServer(req.params.id);
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
+  }
+});
+
+app.put('/api/vds/servers/:id', requireAuth, (req, res) => {
+  try {
+    const server = vds.updateServer(req.params.id, req.body);
+    if (!server) return res.status(404).json({ success: false, message: 'Сервер не найден' });
+    res.json({ success: true, server });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
+  }
+});
+
+app.post('/api/vds/connect', requireAuth, async (req, res) => {
+  try {
+    const { serverId } = req.body;
+    if (!serverId) return res.status(400).json({ success: false, message: 'serverId обязателен' });
+    const result = await vds.connectToServer(serverId);
+    res.json({ success: true, status: result });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
+  }
+});
+
+app.post('/api/vds/disconnect', requireAuth, async (req, res) => {
+  try {
+    await vds.disconnectServer();
+    res.json({ success: true, message: 'Отключено' });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
+  }
+});
+
+app.get('/api/vds/ip', requireAuth, async (req, res) => {
+  try {
+    const useProxy = req.query.cascade === 'true';
+    const ips = await vds.getExternalIp(useProxy);
+    res.json({ success: true, ...ips, mode: useProxy ? 'cascade' : 'direct' });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
+  }
+});
+
+app.post('/api/vds/speedtest', requireAuth, async (req, res) => {
+  try {
+    const useProxy = req.body.cascade === true;
+    const result = await vds.runSpeedtest(useProxy);
+    res.json({ success: true, ...result, mode: useProxy ? 'cascade' : 'direct' });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
+  }
+});
+
+app.post('/api/vds/optimize', requireAuth, async (req, res) => {
+  try {
+    const { serverId } = req.body;
+    if (!serverId) return res.status(400).json({ success: false, message: 'serverId обязателен' });
+    const result = await vds.optimizeServer(serverId);
+    res.json({ success: result.success, result });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
+  }
+});
+
+app.post('/api/vds/mode', requireAuth, (req, res) => {
+  try {
+    const { mode } = req.body;
+    const config = vds.loadVdsConfig();
+    if (mode === 'direct') {
+      config.mode = 'direct';
+      vds.saveVdsConfig(config);
+      vds.disconnectServer();
+    } else if (mode === 'cascade') {
+      config.mode = 'cascade';
+      vds.saveVdsConfig(config);
+    }
+    res.json({ success: true, mode: config.mode });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
+  }
+});
+
+// ─────────────────────────────────────────────
 //  DIAGNOSTICS
 // ─────────────────────────────────────────────
 app.get('/api/diagnostics/vless', requireAuth, async (req, res) => {
@@ -1568,7 +1679,8 @@ app.get('*', (req, res) => {
 server.listen(PORT, '0.0.0.0', () => {
   restartDiscordMonitor();
   console.log(`\n╔══════════════════════════════════════╗`);
-  console.log(`║   Панель NaiveProxy                  ║`);
+  console.log(`║   Панель NaiveProxy v4.0             ║`);
+  console.log(`║   VDS Каскад + Оптимизация скорости  ║`);
   console.log(`║   Running on http://0.0.0.0:${PORT}     ║`);
   console.log(`╚══════════════════════════════════════╝\n`);
 });

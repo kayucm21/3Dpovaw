@@ -267,6 +267,10 @@ function goToPage(page) {
       document.getElementById('resourcesPage').classList.remove('hidden');
       loadResources();
       break;
+    case 'vds':
+      document.getElementById('vdsPage').classList.remove('hidden');
+      loadVdsPage();
+      break;
     case 'install':
       document.getElementById('installPage').classList.remove('hidden');
       loadInstallPage();
@@ -1101,6 +1105,288 @@ window.goToPage = function(page) {
   oldGoToPage(page);
   if (page === 'subscriptions') {
     loadSubscriptions();
+  }
+};
+
+// ═══════════════════════════════════════════════════════════════
+// V4.0 — VDS CASCADE
+// ═══════════════════════════════════════════════════════════════
+
+let vdsStatus = null;
+let vdsSpeedtestInterval = null;
+
+async function loadVdsPage() {
+  await loadVdsStatus();
+  await renderVdsServers();
+  await refreshVdsIps();
+}
+
+async function loadVdsStatus() {
+  try {
+    const res = await fetch('/api/vds/status');
+    if (res.ok) {
+      vdsStatus = await res.json();
+      updateVdsConnectionBadge(vdsStatus);
+      updateVdsModeCards(vdsStatus.mode);
+    }
+  } catch (e) {
+    console.error('Failed to load VDS status:', e);
+  }
+}
+
+function updateVdsConnectionBadge(status) {
+  const badge = document.getElementById('vdsConnectionBadge');
+  if (!badge) return;
+  if (status.connected) {
+    badge.textContent = `Подключено к ${status.activeServer?.host || 'VDS'}`;
+    badge.className = 'platform-badge platform-android';
+  } else {
+    badge.textContent = 'Не подключено';
+    badge.className = 'platform-badge platform-unknown';
+  }
+}
+
+function updateVdsModeCards(mode) {
+  const directCard = document.getElementById('modeDirectCard');
+  const cascadeCard = document.getElementById('modeCascadeCard');
+  if (!directCard || !cascadeCard) return;
+  directCard.style.borderColor = mode === 'direct' ? '#7c3aed' : 'transparent';
+  cascadeCard.style.borderColor = mode === 'cascade' ? '#7c3aed' : 'transparent';
+}
+
+async function setVdsMode(mode) {
+  try {
+    const res = await fetch('/api/vds/mode', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mode })
+    });
+    if (res.ok) {
+      const data = await res.json();
+      updateVdsModeCards(data.mode);
+      showToast(data.mode === 'cascade' ? 'Режим каскада включён' : 'Прямой режим включён', 'success');
+      await loadVdsStatus();
+      await renderVdsServers();
+    }
+  } catch (e) {
+    showToast('Ошибка изменения режима', 'error');
+  }
+}
+
+function renderVdsServers() {
+  const container = document.getElementById('vdsServersList');
+  const optimizeContainer = document.getElementById('vdsOptimizeServers');
+  if (!container || !optimizeContainer) return;
+
+  if (!vdsStatus || !vdsStatus.servers || vdsStatus.servers.length === 0) {
+    container.innerHTML = '<div style="text-align: center; color: var(--text-secondary); padding: 20px;">Нет сохранённых серверов. Добавьте первый сервер выше.</div>';
+    optimizeContainer.innerHTML = '';
+    return;
+  }
+
+  container.innerHTML = vdsStatus.servers.map(s => {
+    const isActive = vdsStatus.activeServerId === s.id;
+    return `
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: var(--bg-input); border-radius: var(--radius); ${isActive ? 'border: 2px solid var(--accent);' : ''}">
+        <div style="flex: 1;">
+          <div style="font-weight: 600; font-size: 14px;">${escapeHtml(s.label || s.host)}</div>
+          <div style="font-size: 12px; color: var(--text-secondary);">${escapeHtml(s.host)}:${s.port} (${escapeHtml(s.username)})</div>
+        </div>
+        <div style="display: flex; gap: 8px;">
+          ${vdsStatus.mode === 'cascade' ? `
+            <button class="btn btn-sm ${isActive ? 'btn-success' : 'btn-primary'}" onclick="connectVdsServer('${s.id}')">
+              ${isActive ? '✓ Подключено' : 'Подключить'}
+            </button>
+          ` : `
+            <button class="btn btn-sm btn-primary" onclick="connectVdsServer('${s.id}')" title="Выберите режим каскада">
+              Подключить
+            </button>
+          `}
+          <button class="btn btn-sm btn-shiny" onclick="optimizeVdsServer('${s.id}')">⚡ Оптимизировать</button>
+          <button class="btn-icon" onclick="deleteVdsServer('${s.id}')" title="Удалить" style="color: var(--danger);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          </button>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  // Optimize buttons section
+  optimizeContainer.innerHTML = `
+    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+      ${vdsStatus.servers.map(s => `
+        <button class="btn btn-sm btn-shiny" onclick="optimizeVdsServer('${s.id}')">
+          ⚡ ${escapeHtml(s.label || s.host)}
+        </button>
+      `).join('')}
+    </div>
+  `;
+}
+
+async function connectVdsServer(serverId) {
+  const btn = event.target;
+  btn.disabled = true;
+  btn.innerHTML = '⏳ Подключение...';
+
+  try {
+    const res = await fetch('/api/vds/connect', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ serverId })
+    });
+    if (res.ok) {
+      const data = await res.json();
+      showToast(`Подключено к ${data.status.activeServer?.host || 'VDS'}`, 'success');
+      await loadVdsStatus();
+      await renderVdsServers();
+      await refreshVdsIps();
+    } else {
+      const err = await res.json();
+      showToast(err.message || 'Ошибка подключения', 'error');
+    }
+  } catch (e) {
+    showToast('Ошибка соединения', 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = 'Подключить';
+  }
+}
+
+async function deleteVdsServer(serverId) {
+  if (!confirm('Удалить этот сервер из списка?')) return;
+  try {
+    const res = await fetch(`/api/vds/servers/${serverId}`, { method: 'DELETE' });
+    if (res.ok) {
+      showToast('Сервер удалён', 'success');
+      await loadVdsStatus();
+      await renderVdsServers();
+    }
+  } catch (e) {
+    showToast('Ошибка удаления', 'error');
+  }
+}
+
+async function optimizeVdsServer(serverId) {
+  const btn = event.target;
+  btn.disabled = true;
+  btn.innerHTML = '⏳ Оптимизация...';
+
+  try {
+    const res = await fetch('/api/vds/optimize', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ serverId })
+    });
+    if (res.ok) {
+      showToast('Оптимизация применена! Скорость должна увеличиться.', 'success');
+    } else {
+      const err = await res.json();
+      showToast(err.message || 'Ошибка оптимизации', 'error');
+    }
+  } catch (e) {
+    showToast('Ошибка соединения', 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '⚡ Оптимизировать';
+  }
+}
+
+async function refreshVdsIps() {
+  try {
+    // Direct IP
+    const directRes = await fetch('/api/vds/ip?cascade=false');
+    if (directRes.ok) {
+      const direct = await directRes.json();
+      document.getElementById('vdsDirectIp').textContent = direct.ipv4 || direct.ipv6 || '—';
+    }
+
+    // Cascade IP (through SOCKS5)
+    const cascadeRes = await fetch('/api/vds/ip?cascade=true');
+    if (cascadeRes.ok) {
+      const cascade = await cascadeRes.json();
+      document.getElementById('vdsCascadeIp').textContent = cascade.ipv4 || cascade.ipv6 || '—';
+    }
+  } catch (e) {
+    console.error('Failed to refresh IPs:', e);
+  }
+}
+
+async function runVdsSpeedtest(useProxy) {
+  const btn = event.target;
+  btn.disabled = true;
+  btn.innerHTML = '⏳ Тестирование...';
+
+  try {
+    const res = await fetch('/api/vds/speedtest', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cascade: useProxy })
+    });
+    if (res.ok) {
+      const data = await res.json();
+      document.getElementById('vdsSpeedDownload').textContent = (data.download || 0).toFixed(2);
+      document.getElementById('vdsSpeedUpload').textContent = (data.upload || 0).toFixed(2);
+      document.getElementById('vdsSpeedPing').textContent = (data.ping || '—');
+      showToast(`Тест завершён! ${useProxy ? 'Через каскад' : 'Прямой'}`, 'success');
+    } else {
+      showToast('Ошибка теста скорости', 'error');
+    }
+  } catch (e) {
+    showToast('Ошибка соединения', 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = useProxy ? '🚀 Тест через каскад' : '🚀 Тест основного';
+  }
+}
+
+document.getElementById('vdsAddServerForm')?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = e.target.querySelector('button[type="submit"]');
+  btn.disabled = true;
+  btn.innerHTML = '⏳ Добавление...';
+
+  const data = {
+    host: document.getElementById('vdsHost').value,
+    port: parseInt(document.getElementById('vdsPort').value) || 22,
+    username: document.getElementById('vdsUsername').value || 'root',
+    password: document.getElementById('vdsPassword').value,
+    label: document.getElementById('vdsLabel').value || null
+  };
+
+  try {
+    const res = await fetch('/api/vds/servers', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    if (res.ok) {
+      showToast('Сервер добавлен!', 'success');
+      e.target.reset();
+      document.getElementById('vdsUsername').value = 'root';
+      document.getElementById('vdsPort').value = '22';
+      await loadVdsStatus();
+      await renderVdsServers();
+    } else {
+      const err = await res.json();
+      showToast(err.message || 'Ошибка добавления', 'error');
+    }
+  } catch (e) {
+    showToast('Ошибка соединения', 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = `
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Добавить сервер
+    `;
+  }
+});
+
+// Обновление навигации для VDS
+const _oldGoToPageVds = window.goToPage;
+window.goToPage = function(page) {
+  _oldGoToPageVds(page);
+  if (page === 'vds') {
+    loadVdsPage();
   }
 };
 

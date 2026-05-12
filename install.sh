@@ -226,10 +226,7 @@ git clone --depth=1 --single-branch "$REPO_URL" "$PANEL_DIR" >/dev/null 2>&1
 
 cd "$PANEL_DIR/panel" || exit 1
 
-# Установка build-tools для нативных модулей (node-pty)
-apt-get install -y -qq build-essential python3 make g++ >/dev/null 2>&1 || true
-
-# Установка зависимостей с выводом ошибок
+# Установка зависимостей (без компиляции - node-pty удалён)
 if ! npm install --omit=dev --no-audit --no-fund 2>&1; then
   log_ok "Повторная попытка npm install..."
   npm install --omit=dev --no-audit --no-fund --force 2>&1

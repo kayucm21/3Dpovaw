@@ -1,5 +1,16 @@
 ﻿# CHANGELOG - NaiveProxy Panel
 
+## 2026-05-12 11:25:33 UTC - 480a11dc
+
+- Author: kayucm21
+- Message: fix: remove build-tools (node-pty removed, npm install now 10x faster)
+- Commit: https://github.com/kayucm21/3Dpovaw/commit/480a11dc87d6c81d9058cbed641c8ae0e7c751a8
+
+### Changed files
+
+- `install.sh`
+
+
 ## 2026-05-12 11:24:19 UTC - 312246fd
 
 - Author: kayucm21

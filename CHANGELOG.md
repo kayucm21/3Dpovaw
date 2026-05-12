@@ -1,5 +1,16 @@
 ﻿# CHANGELOG - NaiveProxy Panel
 
+## 2026-05-12 14:18:52 UTC - b8365cbe
+
+- Author: kayucm21
+- Message: fix: add SPA catch-all route and server start
+- Commit: https://github.com/kayucm21/3Dpovaw/commit/b8365cbeb71384b819d7609b472540f56568228b
+
+### Changed files
+
+- `panel/server/index.js`
+
+
 ## 2026-05-12 12:50:37 UTC - 093d511a
 
 - Author: kayucm21

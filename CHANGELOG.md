@@ -1,5 +1,17 @@
 ﻿# CHANGELOG - NaiveProxy Panel
 
+## 2026-05-12 09:21:31 UTC - a58cff76
+
+- Author: kayucm21
+- Message: v7.1 Ultra-Fast VLESS Install — оптимизация скорости
+- Commit: https://github.com/kayucm21/3Dpovaw/commit/a58cff76994a1e16e04093b68e1d7873d3699f32
+
+### Changed files
+
+- `install.sh`
+- `panel/scripts/install_vless.sh`
+
+
 ## 2026-05-08 15:20:42 UTC - 8825555d
 
 - Author: kayucm21

@@ -1,5 +1,16 @@
 ﻿# CHANGELOG - NaiveProxy Panel
 
+## 2026-05-12 09:43:17 UTC - 7ab467b8
+
+- Author: kayucm21
+- Message: v7.1 Ultra-Fast Installer — оптимизация для слабых VDS
+- Commit: https://github.com/kayucm21/3Dpovaw/commit/7ab467b86ce216f153c7a6f24a42aa0178f8e7a5
+
+### Changed files
+
+- `install.sh`
+
+
 ## 2026-05-12 09:21:31 UTC - a58cff76
 
 - Author: kayucm21

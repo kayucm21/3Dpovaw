@@ -1,5 +1,16 @@
 ﻿# CHANGELOG - NaiveProxy Panel
 
+## 2026-05-12 11:03:08 UTC - 5c559cd6
+
+- Author: kayucm21
+- Message: add: fix-panel.sh script for panel recovery
+- Commit: https://github.com/kayucm21/3Dpovaw/commit/5c559cd666ce5d26cd67f01e391ca399cc8c7251
+
+### Changed files
+
+- `fix-panel.sh`
+
+
 ## 2026-05-12 11:00:42 UTC - 91063438
 
 - Author: kayucm21

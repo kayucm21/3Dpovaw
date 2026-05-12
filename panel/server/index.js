@@ -10,7 +10,6 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const os = require('os');
-const vds = require('./vds');
 
 const app = express();
 const server = http.createServer(app);
@@ -191,7 +190,7 @@ function formatMoscowTime(dateInput) {
       second: '2-digit'
     });
   } catch {
-    return '—';
+    return 'вЂ”';
   }
 }
 
@@ -202,7 +201,7 @@ function generateDeviceId(userAgent, ip) {
 }
 
 function parseDeviceFromUA(ua) {
-  if (!ua) return 'Неизвестно';
+  if (!ua) return 'РќРµРёР·РІРµСЃС‚РЅРѕ';
   const v = ua.toLowerCase();
   if (v.includes('android')) return 'Android';
   if (v.includes('iphone') || v.includes('ios')) return 'iPhone/iOS';
@@ -248,7 +247,7 @@ function logConnection(username, protocol, ip, userAgent, deviceInfo) {
     protocol,
     ip,
     userAgent,
-    device: deviceInfo.device || 'Неизвестно',
+    device: deviceInfo.device || 'РќРµРёР·РІРµСЃС‚РЅРѕ',
     hwid: deviceInfo.hwid || generateDeviceId(userAgent, ip),
     blocked: false
   };
@@ -330,8 +329,8 @@ function parseCaddyConnections(logPath) {
         time: formatMoscowTime(item.ts ? new Date(item.ts * 1000) : new Date()),
         protocol: 'naive',
         username: user || 'unknown',
-        ip: req.remote_ip || item.remote_ip || '—',
-        userAgent: ua || '—',
+        ip: req.remote_ip || item.remote_ip || 'вЂ”',
+        userAgent: ua || 'вЂ”',
         device: deviceInfo.device,
         hwid: deviceInfo.hwid,
         blocked: checkDeviceBlocked(deviceInfo.hwid)
@@ -359,8 +358,8 @@ function parseXrayConnections(logPath) {
       protocol: 'vless',
       username: emailMatch ? emailMatch[1] : 'vless-user',
       ip: ipMatch[1],
-      userAgent: '—',
-      device: 'Неизвестно',
+      userAgent: 'вЂ”',
+      device: 'РќРµРёР·РІРµСЃС‚РЅРѕ',
       hwid,
       blocked: checkDeviceBlocked(hwid)
     });
@@ -412,55 +411,55 @@ async function sendDeviceBlockedWebhook(device, hwid, blockedAt) {
   
   const payload = {
     embeds: [{
-      title: '🚫 Устройство заблокировано',
-      color: 15158332, // Красный цвет
+      title: 'рџљ« РЈСЃС‚СЂРѕР№СЃС‚РІРѕ Р·Р°Р±Р»РѕРєРёСЂРѕРІР°РЅРѕ',
+      color: 15158332, // РљСЂР°СЃРЅС‹Р№ С†РІРµС‚
       thumbnail: {
         url: 'https://i.imgur.com/7QxKZyP.png'
       },
       fields: [
         {
-          name: '👤 Пользователь',
-          value: `\`${device.username || 'Неизвестно'}\``,
+          name: 'рџ‘¤ РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ',
+          value: `\`${device.username || 'РќРµРёР·РІРµСЃС‚РЅРѕ'}\``,
           inline: true
         },
         {
-          name: '📱 Устройство',
-          value: `\`${device.device || 'Неизвестно'}\``,
+          name: 'рџ“± РЈСЃС‚СЂРѕР№СЃС‚РІРѕ',
+          value: `\`${device.device || 'РќРµРёР·РІРµСЃС‚РЅРѕ'}\``,
           inline: true
         },
         {
-          name: '🔑 HWID (Серийный номер)',
+          name: 'рџ”‘ HWID (РЎРµСЂРёР№РЅС‹Р№ РЅРѕРјРµСЂ)',
           value: `\`${hwid}\``,
           inline: false
         },
         {
-          name: '🌍 IP адрес',
-          value: `\`${device.ip || 'Неизвестно'}\``,
+          name: 'рџЊЌ IP Р°РґСЂРµСЃ',
+          value: `\`${device.ip || 'РќРµРёР·РІРµСЃС‚РЅРѕ'}\``,
           inline: true
         },
         {
-          name: '📊 Платформа',
-          value: `\`${device.device || 'Неизвестно'}\``,
+          name: 'рџ“Љ РџР»Р°С‚С„РѕСЂРјР°',
+          value: `\`${device.device || 'РќРµРёР·РІРµСЃС‚РЅРѕ'}\``,
           inline: true
         },
         {
-          name: '🕐 Время блокировки (МСК)',
+          name: 'рџ•ђ Р’СЂРµРјСЏ Р±Р»РѕРєРёСЂРѕРІРєРё (РњРЎРљ)',
           value: `\`${nowMsk}\``,
           inline: false
         },
         {
-          name: '🔒 Протокол',
-          value: `\`${device.protocol?.toUpperCase() || 'НЕИЗВЕСТНО'}\``,
+          name: 'рџ”’ РџСЂРѕС‚РѕРєРѕР»',
+          value: `\`${device.protocol?.toUpperCase() || 'РќР•РР—Р’Р•РЎРўРќРћ'}\``,
           inline: true
         },
         {
-          name: '⏰ Первое подключение',
+          name: 'вЏ° РџРµСЂРІРѕРµ РїРѕРґРєР»СЋС‡РµРЅРёРµ',
           value: `\`${formatMoscowTime(device.firstSeen)}\``,
           inline: true
         }
       ],
       footer: {
-        text: 'NaiveProxy Panel - Глобальное обновление v2.0'
+        text: 'NaiveProxy Panel - Р“Р»РѕР±Р°Р»СЊРЅРѕРµ РѕР±РЅРѕРІР»РµРЅРёРµ v2.0'
       },
       timestamp: new Date().toISOString()
     }]
@@ -485,20 +484,20 @@ function restartDiscordMonitor() {
       const nowMsk = formatMoscowTime(new Date());
       const payload = {
         embeds: [{
-          title: 'Мониторинг панели',
+          title: 'РњРѕРЅРёС‚РѕСЂРёРЅРі РїР°РЅРµР»Рё',
           color: status === 'running' ? 3066993 : 15158332,
           fields: [
-            { name: 'Статус', value: status, inline: true },
+            { name: 'РЎС‚Р°С‚СѓСЃ', value: status, inline: true },
             { name: 'CPU load(1m)', value: String(metrics.cpuLoad1), inline: true },
             { name: 'RAM', value: `${metrics.memUsedGb}/${metrics.memTotalGb} GB (${metrics.memUsedPct}%)`, inline: true },
-            { name: 'Время (МСК)', value: nowMsk, inline: false }
+            { name: 'Р’СЂРµРјСЏ (РњРЎРљ)', value: nowMsk, inline: false }
           ]
         }]
       };
       sendDiscordWebhook(latest.discordWebhookUrl, payload);
       if (lastDiscordServiceState && lastDiscordServiceState !== status) {
         sendDiscordWebhook(latest.discordWebhookUrl, {
-          content: `Сервис сменил статус: ${lastDiscordServiceState} -> ${status} (${nowMsk})`
+          content: `РЎРµСЂРІРёСЃ СЃРјРµРЅРёР» СЃС‚Р°С‚СѓСЃ: ${lastDiscordServiceState} -> ${status} (${nowMsk})`
         });
       }
       lastDiscordServiceState = status;
@@ -544,16 +543,16 @@ function requireAuth(req, res, next) {
   res.status(401).json({ error: 'Unauthorized' });
 }
 
-// ─────────────────────────────────────────────
+// в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 //  AUTH ROUTES
-// ─────────────────────────────────────────────
+// в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 app.post('/api/login', (req, res) => {
   const { username, password } = req.body;
   const users = loadUsers();
   const user = users[username];
-  if (!user) return res.json({ success: false, message: 'Неверный логин или пароль' });
+  if (!user) return res.json({ success: false, message: 'РќРµРІРµСЂРЅС‹Р№ Р»РѕРіРёРЅ РёР»Рё РїР°СЂРѕР»СЊ' });
   if (!bcrypt.compareSync(password, user.password)) {
-    return res.json({ success: false, message: 'Неверный логин или пароль' });
+    return res.json({ success: false, message: 'РќРµРІРµСЂРЅС‹Р№ Р»РѕРіРёРЅ РёР»Рё РїР°СЂРѕР»СЊ' });
   }
   req.session.authenticated = true;
   req.session.username = username;
@@ -570,9 +569,9 @@ app.get('/api/me', requireAuth, (req, res) => {
   res.json({ username: req.session.username, role: req.session.role });
 });
 
-// ─────────────────────────────────────────────
+// в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 //  CONFIG ROUTES
-// ─────────────────────────────────────────────
+// в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 app.get('/api/config', requireAuth, (req, res) => {
   const config = loadConfig();
   // Don't send passwords
@@ -583,23 +582,23 @@ app.get('/api/config', requireAuth, (req, res) => {
 app.post('/api/config/change-password', requireAuth, (req, res) => {
   const { currentPassword, newPassword } = req.body;
   if (!currentPassword || !newPassword) {
-    return res.json({ success: false, message: 'Заполните все поля' });
+    return res.json({ success: false, message: 'Р—Р°РїРѕР»РЅРёС‚Рµ РІСЃРµ РїРѕР»СЏ' });
   }
   if (newPassword.length < 6) {
-    return res.json({ success: false, message: 'Новый пароль минимум 6 символов' });
+    return res.json({ success: false, message: 'РќРѕРІС‹Р№ РїР°СЂРѕР»СЊ РјРёРЅРёРјСѓРј 6 СЃРёРјРІРѕР»РѕРІ' });
   }
   const users = loadUsers();
   const user = users[req.session.username];
   if (!user) {
-    return res.json({ success: false, message: 'Пользователь не найден' });
+    return res.json({ success: false, message: 'РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ РЅРµ РЅР°Р№РґРµРЅ' });
   }
   if (!bcrypt.compareSync(currentPassword, user.password)) {
-    return res.json({ success: false, message: 'Текущий пароль неверен' });
+    return res.json({ success: false, message: 'РўРµРєСѓС‰РёР№ РїР°СЂРѕР»СЊ РЅРµРІРµСЂРµРЅ' });
   }
   // Hash and save new password
   users[req.session.username].password = bcrypt.hashSync(newPassword, 10);
   saveUsers(users);
-  res.json({ success: true, message: 'Пароль успешно изменён' });
+  res.json({ success: true, message: 'РџР°СЂРѕР»СЊ СѓСЃРїРµС€РЅРѕ РёР·РјРµРЅС‘РЅ' });
 });
 
 app.get('/api/config/discord', requireAuth, (req, res) => {
@@ -618,32 +617,32 @@ app.post('/api/config/discord', requireAuth, (req, res) => {
   config.discordWebhookUrl = String(webhookUrl || '').trim();
   config.discordIntervalSec = Math.max(60, safeNumber(intervalSec, 300));
   if (config.discordEnabled && !config.discordWebhookUrl) {
-    return res.json({ success: false, message: 'Webhook URL обязателен при включении' });
+    return res.json({ success: false, message: 'Webhook URL РѕР±СЏР·Р°С‚РµР»РµРЅ РїСЂРё РІРєР»СЋС‡РµРЅРёРё' });
   }
   saveConfig(config);
   restartDiscordMonitor();
-  res.json({ success: true, message: 'Discord настройки сохранены' });
+  res.json({ success: true, message: 'Discord РЅР°СЃС‚СЂРѕР№РєРё СЃРѕС…СЂР°РЅРµРЅС‹' });
 });
 
 app.post('/api/config/discord/test', requireAuth, async (req, res) => {
   const config = loadConfig();
   if (!config.discordWebhookUrl) {
-    return res.json({ success: false, message: 'Webhook URL не задан' });
+    return res.json({ success: false, message: 'Webhook URL РЅРµ Р·Р°РґР°РЅ' });
   }
   const metrics = getSystemSnapshot();
   await sendDiscordWebhook(config.discordWebhookUrl, {
-    content: 'Тестовое сообщение от панели',
+    content: 'РўРµСЃС‚РѕРІРѕРµ СЃРѕРѕР±С‰РµРЅРёРµ РѕС‚ РїР°РЅРµР»Рё',
     embeds: [{
-      title: 'Тест мониторинга',
+      title: 'РўРµСЃС‚ РјРѕРЅРёС‚РѕСЂРёРЅРіР°',
       color: 3447003,
       fields: [
         { name: 'CPU load(1m)', value: String(metrics.cpuLoad1), inline: true },
         { name: 'RAM', value: `${metrics.memUsedGb}/${metrics.memTotalGb} GB (${metrics.memUsedPct}%)`, inline: true },
-        { name: 'Время (МСК)', value: formatMoscowTime(new Date()), inline: false }
+        { name: 'Р’СЂРµРјСЏ (РњРЎРљ)', value: formatMoscowTime(new Date()), inline: false }
       ]
     }]
   });
-  res.json({ success: true, message: 'Тест отправлен в Discord' });
+  res.json({ success: true, message: 'РўРµСЃС‚ РѕС‚РїСЂР°РІР»РµРЅ РІ Discord' });
 });
 
 app.get('/api/config/tiktok', requireAuth, (req, res) => {
@@ -656,16 +655,16 @@ app.post('/api/config/tiktok', requireAuth, (req, res) => {
   const config = loadConfig();
   config.tiktokMode = Boolean(enabled);
   saveConfig(config);
-  res.json({ success: true, message: 'TikTok режим сохранён' });
+  res.json({ success: true, message: 'TikTok СЂРµР¶РёРј СЃРѕС…СЂР°РЅС‘РЅ' });
 });
 
 app.get('/api/tiktok/domains', requireAuth, (req, res) => {
   res.json({ success: true, domains: TIKTOK_DOMAINS });
 });
 
-// ─────────────────────────────────────────────
+// в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 //  PROXY USERS ROUTES
-// ─────────────────────────────────────────────
+// в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 app.get('/api/proxy-users', requireAuth, (req, res) => {
   const config = loadConfig();
   const users = (config.proxyUsers || []).map(u => ensureUserProtocol(u));
@@ -674,17 +673,17 @@ app.get('/api/proxy-users', requireAuth, (req, res) => {
 
 app.post('/api/proxy-users/add', requireAuth, (req, res) => {
   const { username, password, protocol, vlessPort } = req.body;
-  if (!username) return res.json({ success: false, message: 'Имя пользователя обязательно' });
+  if (!username) return res.json({ success: false, message: 'РРјСЏ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ РѕР±СЏР·Р°С‚РµР»СЊРЅРѕ' });
   const normalizedProtocol = normalizeProtocol(protocol);
   const actualPassword = normalizedProtocol === 'vless' ? (password || crypto.randomUUID()) : password;
-  if (!actualPassword) return res.json({ success: false, message: 'Пароль обязателен для Naive' });
+  if (!actualPassword) return res.json({ success: false, message: 'РџР°СЂРѕР»СЊ РѕР±СЏР·Р°С‚РµР»РµРЅ РґР»СЏ Naive' });
 
   const config = loadConfig();
   if (!config.proxyUsers) config.proxyUsers = [];
   
   // Check duplicate
   if (config.proxyUsers.find(u => u.username === username && normalizeProtocol(u.protocol) === normalizedProtocol)) {
-    return res.json({ success: false, message: 'Пользователь уже существует' });
+    return res.json({ success: false, message: 'РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ СѓР¶Рµ СЃСѓС‰РµСЃС‚РІСѓРµС‚' });
   }
   
   config.proxyUsers.push({
@@ -726,7 +725,7 @@ app.delete('/api/proxy-users/:username', requireAuth, (req, res) => {
   const before = (config.proxyUsers || []).length;
   config.proxyUsers = (config.proxyUsers || []).filter(u => u.username !== username);
   if (config.proxyUsers.length === before) {
-    return res.json({ success: false, message: 'Пользователь не найден' });
+    return res.json({ success: false, message: 'РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ РЅРµ РЅР°Р№РґРµРЅ' });
   }
   saveConfig(config);
 
@@ -776,16 +775,16 @@ app.get('/api/devices', requireAuth, (req, res) => {
 app.post('/api/devices/block', requireAuth, async (req, res) => {
   const { hwid } = req.body;
   if (!hwid) {
-    return res.json({ success: false, message: 'HWID обязателен' });
+    return res.json({ success: false, message: 'HWID РѕР±СЏР·Р°С‚РµР»РµРЅ' });
   }
   
   const devices = loadDevices();
   const device = devices.devices.find(d => d.hwid === hwid);
   if (!device) {
-    return res.json({ success: false, message: 'Устройство не найдено' });
+    return res.json({ success: false, message: 'РЈСЃС‚СЂРѕР№СЃС‚РІРѕ РЅРµ РЅР°Р№РґРµРЅРѕ' });
   }
   
-  // Отправляем уведомление в Discord ДО блокировки
+  // РћС‚РїСЂР°РІР»СЏРµРј СѓРІРµРґРѕРјР»РµРЅРёРµ РІ Discord Р”Рћ Р±Р»РѕРєРёСЂРѕРІРєРё
   const blockedAt = new Date().toISOString();
   await sendDeviceBlockedWebhook(device, hwid, blockedAt);
   
@@ -793,26 +792,26 @@ app.post('/api/devices/block', requireAuth, async (req, res) => {
   device.blockedAt = blockedAt;
   saveDevices(devices);
   
-  res.json({ success: true, message: `Устройство ${device.username} заблокировано` });
+  res.json({ success: true, message: `РЈСЃС‚СЂРѕР№СЃС‚РІРѕ ${device.username} Р·Р°Р±Р»РѕРєРёСЂРѕРІР°РЅРѕ` });
 });
 
 app.post('/api/devices/unblock', requireAuth, (req, res) => {
   const { hwid } = req.body;
   if (!hwid) {
-    return res.json({ success: false, message: 'HWID обязателен' });
+    return res.json({ success: false, message: 'HWID РѕР±СЏР·Р°С‚РµР»РµРЅ' });
   }
   
   const devices = loadDevices();
   const device = devices.devices.find(d => d.hwid === hwid);
   if (!device) {
-    return res.json({ success: false, message: 'Устройство не найдено' });
+    return res.json({ success: false, message: 'РЈСЃС‚СЂРѕР№СЃС‚РІРѕ РЅРµ РЅР°Р№РґРµРЅРѕ' });
   }
   
   device.blocked = false;
   delete device.blockedAt;
   saveDevices(devices);
   
-  res.json({ success: true, message: `Устройство ${device.username} разблокировано` });
+  res.json({ success: true, message: `РЈСЃС‚СЂРѕР№СЃС‚РІРѕ ${device.username} СЂР°Р·Р±Р»РѕРєРёСЂРѕРІР°РЅРѕ` });
 });
 
 app.get('/api/logs', requireAuth, (req, res) => {
@@ -831,13 +830,13 @@ app.get('/api/logs', requireAuth, (req, res) => {
 
 app.post('/api/vless/one-time-qr', requireAuth, (req, res) => {
   const { username } = req.body;
-  if (!username) return res.json({ success: false, message: 'Имя пользователя обязательно' });
+  if (!username) return res.json({ success: false, message: 'РРјСЏ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ РѕР±СЏР·Р°С‚РµР»СЊРЅРѕ' });
   const config = loadConfig();
   const user = (config.proxyUsers || []).find(
     (u) => u.username === username && normalizeProtocol(u.protocol) === 'vless'
   );
-  if (!user) return res.json({ success: false, message: 'VLESS пользователь не найден' });
-  if (!config.installed || !config.domain) return res.json({ success: false, message: 'Сервер не установлен' });
+  if (!user) return res.json({ success: false, message: 'VLESS РїРѕР»СЊР·РѕРІР°С‚РµР»СЊ РЅРµ РЅР°Р№РґРµРЅ' });
+  if (!config.installed || !config.domain) return res.json({ success: false, message: 'РЎРµСЂРІРµСЂ РЅРµ СѓСЃС‚Р°РЅРѕРІР»РµРЅ' });
 
   const token = crypto.randomBytes(24).toString('hex');
   oneTimeQrTokens.set(token, {
@@ -850,18 +849,18 @@ app.post('/api/vless/one-time-qr', requireAuth, (req, res) => {
 app.get('/api/vless/one-time-qr/:token', requireAuth, (req, res) => {
   const token = req.params.token;
   const payload = oneTimeQrTokens.get(token);
-  if (!payload) return res.status(404).json({ success: false, message: 'Токен не найден или уже использован' });
+  if (!payload) return res.status(404).json({ success: false, message: 'РўРѕРєРµРЅ РЅРµ РЅР°Р№РґРµРЅ РёР»Рё СѓР¶Рµ РёСЃРїРѕР»СЊР·РѕРІР°РЅ' });
   if (Date.now() > payload.expiresAt) {
     oneTimeQrTokens.delete(token);
-    return res.status(410).json({ success: false, message: 'Срок действия QR истёк' });
+    return res.status(410).json({ success: false, message: 'РЎСЂРѕРє РґРµР№СЃС‚РІРёСЏ QR РёСЃС‚С‘Рє' });
   }
   oneTimeQrTokens.delete(token);
   res.json({ success: true, link: payload.link });
 });
 
-// ─────────────────────────────────────────────
+// в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 //  SERVER STATUS
-// ─────────────────────────────────────────────
+// в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 app.get('/api/status', requireAuth, (req, res) => {
   const config = loadConfig();
   if (!config.installed) {
@@ -901,11 +900,11 @@ app.post('/api/update/run', requireAuth, async (req, res) => {
   saveUpdateState({
     lastUpdateAt: now,
     lastResult: result.code === 0 ? 'success' : 'error',
-    lastMessage: result.code === 0 ? 'Обновлено' : (result.stderr || result.stdout || 'Ошибка обновления')
+    lastMessage: result.code === 0 ? 'РћР±РЅРѕРІР»РµРЅРѕ' : (result.stderr || result.stdout || 'РћС€РёР±РєР° РѕР±РЅРѕРІР»РµРЅРёСЏ')
   });
   res.json({
     success: result.code === 0,
-    message: result.code === 0 ? '✅ Обновление выполнено' : '❌ Ошибка обновления',
+    message: result.code === 0 ? 'вњ… РћР±РЅРѕРІР»РµРЅРёРµ РІС‹РїРѕР»РЅРµРЅРѕ' : 'вќЊ РћС€РёР±РєР° РѕР±РЅРѕРІР»РµРЅРёСЏ',
     details: tailText([result.stdout, result.stderr].filter(Boolean).join('\n'), 260)
   });
 });
@@ -923,16 +922,16 @@ app.post('/api/service/:action', requireAuth, (req, res) => {
   const child = spawn('bash', ['-lc', serviceCommand]);
   child.on('close', (code) => {
     const target = selectedProtocol === 'vless' ? 'Xray + Caddy' : 'Caddy';
-    res.json({ success: code === 0, message: code === 0 ? `${target}: ${action} выполнен` : 'Ошибка управления сервисом' });
+    res.json({ success: code === 0, message: code === 0 ? `${target}: ${action} РІС‹РїРѕР»РЅРµРЅ` : 'РћС€РёР±РєР° СѓРїСЂР°РІР»РµРЅРёСЏ СЃРµСЂРІРёСЃРѕРј' });
   });
   child.on('error', () => {
-    res.json({ success: false, message: 'systemctl недоступен (вы не на сервере?)' });
+    res.json({ success: false, message: 'systemctl РЅРµРґРѕСЃС‚СѓРїРµРЅ (РІС‹ РЅРµ РЅР° СЃРµСЂРІРµСЂРµ?)' });
   });
 });
 
-// ─────────────────────────────────────────────
+// в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 //  INSTALL VIA WEBSOCKET
-// ─────────────────────────────────────────────
+// в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 wss.on('connection', (ws, req) => {
   ws.on('message', (message) => {
     try {
@@ -987,7 +986,7 @@ ${basicAuthLines}
   try {
     fs.writeFileSync('/etc/caddy/Caddyfile', caddyfileContent, 'utf8');
   } catch (e) {
-    // Not running as root or Caddy not installed — skip silently
+    // Not running as root or Caddy not installed вЂ” skip silently
   }
 
   // Reload Caddy to apply new config
@@ -1002,8 +1001,8 @@ function handleInstall(ws, data) {
   const { domain, email, adminLogin, adminPassword, protocol, vlessPort } = data;
 
   if (!domain || !email || !adminLogin || !adminPassword) {
-    sendLog(ws, '❌ Заполните все поля!', null, null, 'error');
-    ws.send(JSON.stringify({ type: 'install_error', message: 'Заполните все поля' }));
+    sendLog(ws, 'вќЊ Р—Р°РїРѕР»РЅРёС‚Рµ РІСЃРµ РїРѕР»СЏ!', null, null, 'error');
+    ws.send(JSON.stringify({ type: 'install_error', message: 'Р—Р°РїРѕР»РЅРёС‚Рµ РІСЃРµ РїРѕР»СЏ' }));
     return;
   }
 
@@ -1040,14 +1039,14 @@ function handleInstall(ws, data) {
     : path.join(__dirname, '../scripts/install_naiveproxy.sh');
   
   if (!fs.existsSync(scriptPath)) {
-    sendLog(ws, '❌ Скрипт установки не найден!', null, null, 'error');
-    ws.send(JSON.stringify({ type: 'install_error', message: `Скрипт установки не найден: ${path.basename(scriptPath)}` }));
+    sendLog(ws, 'вќЊ РЎРєСЂРёРїС‚ СѓСЃС‚Р°РЅРѕРІРєРё РЅРµ РЅР°Р№РґРµРЅ!', null, null, 'error');
+    ws.send(JSON.stringify({ type: 'install_error', message: `РЎРєСЂРёРїС‚ СѓСЃС‚Р°РЅРѕРІРєРё РЅРµ РЅР°Р№РґРµРЅ: ${path.basename(scriptPath)}` }));
     return;
   }
 
   sendLog(
     ws,
-    selectedProtocol === 'vless' ? '🚀 Начинаем установку VLESS...' : '🚀 Начинаем установку NaiveProxy...',
+    selectedProtocol === 'vless' ? 'рџљЂ РќР°С‡РёРЅР°РµРј СѓСЃС‚Р°РЅРѕРІРєСѓ VLESS...' : 'рџљЂ РќР°С‡РёРЅР°РµРј СѓСЃС‚Р°РЅРѕРІРєСѓ NaiveProxy...',
     'init',
     2,
     'info'
@@ -1091,30 +1090,30 @@ function handleInstall(ws, data) {
     if (code === 0) {
       config.installed = true;
       saveConfig(config);
-      sendLog(ws, '✅ Установка завершена успешно!', 'done', 100, 'success');
+      sendLog(ws, 'вњ… РЈСЃС‚Р°РЅРѕРІРєР° Р·Р°РІРµСЂС€РµРЅР° СѓСЃРїРµС€РЅРѕ!', 'done', 100, 'success');
       ws.send(JSON.stringify({
         type: 'install_done',
         link: buildUserLink({ username: adminLogin, password: initialPassword, protocol: selectedProtocol }, config)
       }));
     } else {
-      sendLog(ws, `❌ Установка завершилась с ошибкой (код ${code})`, null, null, 'error');
+      sendLog(ws, `вќЊ РЈСЃС‚Р°РЅРѕРІРєР° Р·Р°РІРµСЂС€РёР»Р°СЃСЊ СЃ РѕС€РёР±РєРѕР№ (РєРѕРґ ${code})`, null, null, 'error');
       ws.send(JSON.stringify({ type: 'install_error', message: `Exit code: ${code}` }));
     }
   });
 
   install.on('error', (err) => {
-    sendLog(ws, `❌ Ошибка запуска скрипта: ${err.message}`, null, null, 'error');
+    sendLog(ws, `вќЊ РћС€РёР±РєР° Р·Р°РїСѓСЃРєР° СЃРєСЂРёРїС‚Р°: ${err.message}`, null, null, 'error');
     ws.send(JSON.stringify({ type: 'install_error', message: err.message }));
   });
 }
 
 function parseLogLine(line) {
   const keywordMap = [
-    { pattern: /установка\s+xray/i, step: 'golang', progress: 35, text: '🧩 Установка Xray...' },
-    { pattern: /настройка\s+xray/i, step: 'caddyfile', progress: 70, text: '📝 Настройка Xray...' },
-    { pattern: /xray\s+сервис/i, step: 'service', progress: 80, text: '⚙️ Настройка Xray сервиса...' },
-    { pattern: /установка.+caddy/i, step: 'caddy', progress: 55, text: '🔧 Установка Caddy...' },
-    { pattern: /caddyfile/i, step: 'caddyfile', progress: 70, text: '📝 Создание Caddyfile...' },
+    { pattern: /СѓСЃС‚Р°РЅРѕРІРєР°\s+xray/i, step: 'golang', progress: 35, text: 'рџ§© РЈСЃС‚Р°РЅРѕРІРєР° Xray...' },
+    { pattern: /РЅР°СЃС‚СЂРѕР№РєР°\s+xray/i, step: 'caddyfile', progress: 70, text: 'рџ“ќ РќР°СЃС‚СЂРѕР№РєР° Xray...' },
+    { pattern: /xray\s+СЃРµСЂРІРёСЃ/i, step: 'service', progress: 80, text: 'вљ™пёЏ РќР°СЃС‚СЂРѕР№РєР° Xray СЃРµСЂРІРёСЃР°...' },
+    { pattern: /СѓСЃС‚Р°РЅРѕРІРєР°.+caddy/i, step: 'caddy', progress: 55, text: 'рџ”§ РЈСЃС‚Р°РЅРѕРІРєР° Caddy...' },
+    { pattern: /caddyfile/i, step: 'caddyfile', progress: 70, text: 'рџ“ќ РЎРѕР·РґР°РЅРёРµ Caddyfile...' },
   ];
   for (const s of keywordMap) {
     if (s.pattern.test(line)) {
@@ -1123,15 +1122,15 @@ function parseLogLine(line) {
   }
 
   const stepMap = [
-    { pattern: /STEP:1/, step: 'update', progress: 10, text: '📦 Обновление системы и зависимостей...' },
-    { pattern: /STEP:2/, step: 'bbr', progress: 18, text: '⚡ Включение BBR...' },
-    { pattern: /STEP:3/, step: 'firewall', progress: 25, text: '🔥 Настройка файрволла...' },
-    { pattern: /STEP:4/, step: 'golang', progress: 35, text: '🐹 Установка Go...' },
-    { pattern: /STEP:5/, step: 'caddy', progress: 55, text: '🔨 Сборка Caddy с naive-плагином (это займёт 3-7 мин)...' },
-    { pattern: /STEP:6/, step: 'caddyfile', progress: 70, text: '📝 Создание конфигурации...' },
-    { pattern: /STEP:7/, step: 'service', progress: 80, text: '⚙️ Настройка systemd сервиса...' },
-    { pattern: /STEP:8/, step: 'start', progress: 90, text: '🟢 Запуск и включение автостарта...' },
-    { pattern: /STEP:DONE/, step: 'done', progress: 100, text: '✅ Готово!' },
+    { pattern: /STEP:1/, step: 'update', progress: 10, text: 'рџ“¦ РћР±РЅРѕРІР»РµРЅРёРµ СЃРёСЃС‚РµРјС‹ Рё Р·Р°РІРёСЃРёРјРѕСЃС‚РµР№...' },
+    { pattern: /STEP:2/, step: 'bbr', progress: 18, text: 'вљЎ Р’РєР»СЋС‡РµРЅРёРµ BBR...' },
+    { pattern: /STEP:3/, step: 'firewall', progress: 25, text: 'рџ”Ґ РќР°СЃС‚СЂРѕР№РєР° С„Р°Р№СЂРІРѕР»Р»Р°...' },
+    { pattern: /STEP:4/, step: 'golang', progress: 35, text: 'рџђ№ РЈСЃС‚Р°РЅРѕРІРєР° Go...' },
+    { pattern: /STEP:5/, step: 'caddy', progress: 55, text: 'рџ”Ё РЎР±РѕСЂРєР° Caddy СЃ naive-РїР»Р°РіРёРЅРѕРј (СЌС‚Рѕ Р·Р°Р№РјС‘С‚ 3-7 РјРёРЅ)...' },
+    { pattern: /STEP:6/, step: 'caddyfile', progress: 70, text: 'рџ“ќ РЎРѕР·РґР°РЅРёРµ РєРѕРЅС„РёРіСѓСЂР°С†РёРё...' },
+    { pattern: /STEP:7/, step: 'service', progress: 80, text: 'вљ™пёЏ РќР°СЃС‚СЂРѕР№РєР° systemd СЃРµСЂРІРёСЃР°...' },
+    { pattern: /STEP:8/, step: 'start', progress: 90, text: 'рџџў Р—Р°РїСѓСЃРє Рё РІРєР»СЋС‡РµРЅРёРµ Р°РІС‚РѕСЃС‚Р°СЂС‚Р°...' },
+    { pattern: /STEP:DONE/, step: 'done', progress: 100, text: 'вњ… Р“РѕС‚РѕРІРѕ!' },
   ];
 
   for (const s of stepMap) {
@@ -1140,13 +1139,13 @@ function parseLogLine(line) {
     }
   }
 
-  if (/error|ошибка|failed|fail/i.test(line)) {
+  if (/error|РѕС€РёР±РєР°|failed|fail/i.test(line)) {
     return { text: line, step: null, progress: null, level: 'error' };
   }
   if (/warn|warning/i.test(line)) {
     return { text: line, step: null, progress: null, level: 'warn' };
   }
-  if (/ok|done|success|✅|✓/i.test(line)) {
+  if (/ok|done|success|вњ…|вњ“/i.test(line)) {
     return { text: line, step: null, progress: null, level: 'success' };
   }
 
@@ -1245,18 +1244,18 @@ async function recommendVlessPorts(preferredPorts) {
   return { recommendedPort: list[0] || 443, ports: list.slice(0, 12) };
 }
 
-// ─────────────────────────────────────────────
+// в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 //  VLESS HELPERS
-// ─────────────────────────────────────────────
+// в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 app.get('/api/vless/recommend-ports', requireAuth, async (req, res) => {
   const config = loadConfig();
   const { recommendedPort, ports } = await recommendVlessPorts(config.vlessPreferredPorts);
   res.json({ success: true, recommendedPort, ports });
 });
 
-// ─────────────────────────────────────────────
+// в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 //  WARP (Cloudflare) ROUTES
-// ─────────────────────────────────────────────
+// в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 app.get('/api/warp', requireAuth, async (req, res) => {
   const config = loadConfig();
   
@@ -1327,7 +1326,7 @@ app.post('/api/warp/killswitch', requireAuth, async (req, res) => {
 app.post('/api/warp/install', requireAuth, (req, res) => {
   const scriptPath = path.join(__dirname, '../scripts/install_warp.sh');
   if (!fs.existsSync(scriptPath)) {
-    return res.json({ success: false, message: 'install_warp.sh не найден' });
+    return res.json({ success: false, message: 'install_warp.sh РЅРµ РЅР°Р№РґРµРЅ' });
   }
 
   // Async job: return immediately so UI doesn't hang.
@@ -1338,7 +1337,7 @@ app.post('/api/warp/install', requireAuth, (req, res) => {
     startedAt: new Date().toISOString(),
     finishedAt: null,
     exitCode: null,
-    message: 'Установка запущена',
+    message: 'РЈСЃС‚Р°РЅРѕРІРєР° Р·Р°РїСѓС‰РµРЅР°',
     output: '',
     error: '',
     details: '',
@@ -1359,7 +1358,7 @@ app.post('/api/warp/install', requireAuth, (req, res) => {
     job.status = 'error';
     job.exitCode = 124;
     job.finishedAt = new Date().toISOString();
-    job.message = 'Таймаут установки (20 минут)';
+    job.message = 'РўР°Р№РјР°СѓС‚ СѓСЃС‚Р°РЅРѕРІРєРё (20 РјРёРЅСѓС‚)';
     try { child.kill('SIGKILL'); } catch {}
   }, 20 * 60 * 1000);
 
@@ -1372,7 +1371,7 @@ app.post('/api/warp/install', requireAuth, (req, res) => {
     const config = loadConfig();
     if (job.exitCode === 0) {
       job.status = 'success';
-      job.message = 'WARP установлен и включён';
+      job.message = 'WARP СѓСЃС‚Р°РЅРѕРІР»РµРЅ Рё РІРєР»СЋС‡С‘РЅ';
       config.warpInstalled = true;
       config.warpEnabled = true;
       const ips = await getEgressIps();
@@ -1388,7 +1387,7 @@ app.post('/api/warp/install', requireAuth, (req, res) => {
       }
     } else {
       job.status = 'error';
-      job.message = `WARP install error (код ${job.exitCode})`;
+      job.message = `WARP install error (РєРѕРґ ${job.exitCode})`;
       config.warpInstalled = config.warpInstalled || false;
       saveConfig(config);
       const detailsParts = [
@@ -1418,25 +1417,25 @@ app.post('/api/warp/install', requireAuth, (req, res) => {
     job.message = e.message || 'spawn error';
   });
 
-  res.json({ success: true, jobId: id, message: 'Установка WARP запущена' });
+  res.json({ success: true, jobId: id, message: 'РЈСЃС‚Р°РЅРѕРІРєР° WARP Р·Р°РїСѓС‰РµРЅР°' });
 });
 
 app.get('/api/warp/install/:jobId', requireAuth, (req, res) => {
   const id = req.params.jobId;
   const job = warpInstallJobs.get(id);
-  if (!job) return res.status(404).json({ success: false, message: 'Job не найден' });
+  if (!job) return res.status(404).json({ success: false, message: 'Job РЅРµ РЅР°Р№РґРµРЅ' });
   res.json({ success: true, job: getJobPublic(job) });
 });
 
 app.post('/api/warp/install/:jobId/cancel', requireAuth, (req, res) => {
   const id = req.params.jobId;
   const job = warpInstallJobs.get(id);
-  if (!job) return res.status(404).json({ success: false, message: 'Job не найден' });
+  if (!job) return res.status(404).json({ success: false, message: 'Job РЅРµ РЅР°Р№РґРµРЅ' });
   if (job.status !== 'running') return res.json({ success: true, job: getJobPublic(job) });
   job.status = 'cancelled';
   job.exitCode = 130;
   job.finishedAt = new Date().toISOString();
-  job.message = 'Отменено пользователем';
+  job.message = 'РћС‚РјРµРЅРµРЅРѕ РїРѕР»СЊР·РѕРІР°С‚РµР»РµРј';
   try { job._child?.kill('SIGKILL'); } catch {}
   res.json({ success: true, job: getJobPublic(job) });
 });
@@ -1451,7 +1450,7 @@ app.post('/api/warp/toggle', requireAuth, async (req, res) => {
   if (want && !config.warpInstalled) {
     return res.json({ 
       success: false, 
-      message: 'Сначала установите WARP через кнопку "Установить/починить WARP"' 
+      message: 'РЎРЅР°С‡Р°Р»Р° СѓСЃС‚Р°РЅРѕРІРёС‚Рµ WARP С‡РµСЂРµР· РєРЅРѕРїРєСѓ "РЈСЃС‚Р°РЅРѕРІРёС‚СЊ/РїРѕС‡РёРЅРёС‚СЊ WARP"' 
     });
   }
 
@@ -1459,7 +1458,7 @@ app.post('/api/warp/toggle', requireAuth, async (req, res) => {
   if (want && !fs.existsSync('/etc/wireguard/warp.conf')) {
     return res.json({ 
       success: false, 
-      message: 'Конфигурация WARP не найдена. Переустановите WARP.' 
+      message: 'РљРѕРЅС„РёРіСѓСЂР°С†РёСЏ WARP РЅРµ РЅР°Р№РґРµРЅР°. РџРµСЂРµСѓСЃС‚Р°РЅРѕРІРёС‚Рµ WARP.' 
     });
   }
 
@@ -1514,8 +1513,8 @@ app.post('/api/warp/toggle', requireAuth, async (req, res) => {
   saveConfig(config);
   
   const statusMsg = want 
-    ? (result.code === 0 ? 'WARP включён' : 'WARP включён с предупреждениями') 
-    : (result.code === 0 ? 'WARP выключен' : 'Не удалось выключить WARP');
+    ? (result.code === 0 ? 'WARP РІРєР»СЋС‡С‘РЅ' : 'WARP РІРєР»СЋС‡С‘РЅ СЃ РїСЂРµРґСѓРїСЂРµР¶РґРµРЅРёСЏРјРё') 
+    : (result.code === 0 ? 'WARP РІС‹РєР»СЋС‡РµРЅ' : 'РќРµ СѓРґР°Р»РѕСЃСЊ РІС‹РєР»СЋС‡РёС‚СЊ WARP');
     
   res.json({
     success: result.code === 0,
@@ -1528,119 +1527,9 @@ app.post('/api/warp/toggle', requireAuth, async (req, res) => {
   });
 });
 
-// ─────────────────────────────────────────────
-//  VDS / CASCADE SERVER ROUTES (v4.0)
-// ─────────────────────────────────────────────
-app.get('/api/vds/status', requireAuth, (req, res) => {
-  try {
-    res.json({ success: true, ...vds.getStatus() });
-  } catch (e) {
-    res.status(500).json({ success: false, message: e.message });
-  }
-});
-
-app.post('/api/vds/servers', requireAuth, (req, res) => {
-  try {
-    const { host, port, password, username, label } = req.body;
-    if (!host || !password) return res.status(400).json({ success: false, message: 'IP и пароль обязательны' });
-    const server = vds.addServer({ host, port: Number(port) || 22, password, username: username || 'root', label: label || host });
-    res.json({ success: true, server });
-  } catch (e) {
-    res.status(500).json({ success: false, message: e.message });
-  }
-});
-
-app.delete('/api/vds/servers/:id', requireAuth, (req, res) => {
-  try {
-    vds.removeServer(req.params.id);
-    res.json({ success: true });
-  } catch (e) {
-    res.status(500).json({ success: false, message: e.message });
-  }
-});
-
-app.put('/api/vds/servers/:id', requireAuth, (req, res) => {
-  try {
-    const server = vds.updateServer(req.params.id, req.body);
-    if (!server) return res.status(404).json({ success: false, message: 'Сервер не найден' });
-    res.json({ success: true, server });
-  } catch (e) {
-    res.status(500).json({ success: false, message: e.message });
-  }
-});
-
-app.post('/api/vds/connect', requireAuth, async (req, res) => {
-  try {
-    const { serverId } = req.body;
-    if (!serverId) return res.status(400).json({ success: false, message: 'serverId обязателен' });
-    const result = await vds.connectToServer(serverId);
-    res.json({ success: true, status: result });
-  } catch (e) {
-    res.status(500).json({ success: false, message: e.message });
-  }
-});
-
-app.post('/api/vds/disconnect', requireAuth, async (req, res) => {
-  try {
-    await vds.disconnectServer();
-    res.json({ success: true, message: 'Отключено' });
-  } catch (e) {
-    res.status(500).json({ success: false, message: e.message });
-  }
-});
-
-app.get('/api/vds/ip', requireAuth, async (req, res) => {
-  try {
-    const useProxy = req.query.cascade === 'true';
-    const ips = await vds.getExternalIp(useProxy);
-    res.json({ success: true, ...ips, mode: useProxy ? 'cascade' : 'direct' });
-  } catch (e) {
-    res.status(500).json({ success: false, message: e.message });
-  }
-});
-
-app.post('/api/vds/speedtest', requireAuth, async (req, res) => {
-  try {
-    const useProxy = req.body.cascade === true;
-    const result = await vds.runSpeedtest(useProxy);
-    res.json({ success: true, ...result, mode: useProxy ? 'cascade' : 'direct' });
-  } catch (e) {
-    res.status(500).json({ success: false, message: e.message });
-  }
-});
-
-app.post('/api/vds/optimize', requireAuth, async (req, res) => {
-  try {
-    const { serverId } = req.body;
-    if (!serverId) return res.status(400).json({ success: false, message: 'serverId обязателен' });
-    const result = await vds.optimizeServer(serverId);
-    res.json({ success: result.success, result });
-  } catch (e) {
-    res.status(500).json({ success: false, message: e.message });
-  }
-});
-
-app.post('/api/vds/mode', requireAuth, (req, res) => {
-  try {
-    const { mode } = req.body;
-    const config = vds.loadVdsConfig();
-    if (mode === 'direct') {
-      config.mode = 'direct';
-      vds.saveVdsConfig(config);
-      vds.disconnectServer();
-    } else if (mode === 'cascade') {
-      config.mode = 'cascade';
-      vds.saveVdsConfig(config);
-    }
-    res.json({ success: true, mode: config.mode });
-  } catch (e) {
-    res.status(500).json({ success: false, message: e.message });
-  }
-});
-
-// ─────────────────────────────────────────────
+// в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 //  DIAGNOSTICS
-// ─────────────────────────────────────────────
+// в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 app.get('/api/diagnostics/vless', requireAuth, async (req, res) => {
   const xray = await execBash("systemctl is-active xray 2>/dev/null || echo inactive", 8000);
   const caddy = await execBash("systemctl is-active caddy 2>/dev/null || echo inactive", 8000);
@@ -1678,16 +1567,15 @@ app.get('*', (req, res) => {
 
 server.listen(PORT, '0.0.0.0', () => {
   restartDiscordMonitor();
-  console.log(`\n╔══════════════════════════════════════╗`);
-  console.log(`║   Панель NaiveProxy v4.0             ║`);
-  console.log(`║   VDS Каскад + Оптимизация скорости  ║`);
-  console.log(`║   Running on http://0.0.0.0:${PORT}     ║`);
-  console.log(`╚══════════════════════════════════════╝\n`);
+  console.log(`\nв•”в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•—`);
+  console.log(`в•‘   РџР°РЅРµР»СЊ NaiveProxy                  в•‘`);
+  console.log(`в•‘   Running on http://0.0.0.0:${PORT}     в•‘`);
+  console.log(`в•љв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ќ\n`);
 });
 
-// ──────────────────────────────────────────────────────────────
+// в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 // NEW v3.0 API ENDPOINTS
-// ──────────────────────────────────────────────────────────────
+// в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 
 // MONITORING & RESOURCES
 app.get('/api/resources', requireAuth, async (req, res) => {
@@ -1708,8 +1596,8 @@ app.get('/api/resources', requireAuth, async (req, res) => {
     const netIn = await execBash("cat /proc/net/dev | grep eth0 | awk '{print $2}' || echo '0'", 5000);
     const netOut = await execBash("cat /proc/net/dev | grep eth0 | awk '{print $10}' || echo '0'", 5000);
     const cpuCores = await execBash("nproc 2>/dev/null || echo 4", 5000);
-    res.json({ cpu: cpuUsage, ram: ramPercent, ramUsed: `${ramUsed} GB`, ramTotal: `${ramTotal} GB`, disk: diskPercent, diskUsed: `${diskUsed} GB`, diskTotal: `${diskTotal} GB`, uptime: uptime.stdout || '—', networkIn: `${netIn.stdout || '0'} KB/s`, networkOut: `${netOut.stdout || '0'} KB/s`, cpuCores: parseInt(cpuCores.stdout) || 4 });
-  } catch { res.json({ cpu: 0, ram: 0, disk: 0, uptime: '—', networkIn: '0 KB/s', networkOut: '0 KB/s' }); }
+    res.json({ cpu: cpuUsage, ram: ramPercent, ramUsed: `${ramUsed} GB`, ramTotal: `${ramTotal} GB`, disk: diskPercent, diskUsed: `${diskUsed} GB`, diskTotal: `${diskTotal} GB`, uptime: uptime.stdout || 'вЂ”', networkIn: `${netIn.stdout || '0'} KB/s`, networkOut: `${netOut.stdout || '0'} KB/s`, cpuCores: parseInt(cpuCores.stdout) || 4 });
+  } catch { res.json({ cpu: 0, ram: 0, disk: 0, uptime: 'вЂ”', networkIn: '0 KB/s', networkOut: '0 KB/s' }); }
 });
 
 // ANALYTICS
@@ -1759,41 +1647,41 @@ app.delete('/api/logs', requireAuth, (req, res) => { try { fs.writeFileSync(CONN
 app.post('/api/password', requireAuth, async (req, res) => { try { const { currentPassword, newPassword } = req.body; const config = loadConfig(); const users = fs.existsSync(USERS_FILE) ? JSON.parse(fs.readFileSync(USERS_FILE, 'utf8')) : [{ username: 'admin', password: config.adminPassword }]; const user = users.find(u => u.username === req.user.username); if (!user) return res.status(404).json({ error: 'User not found' }); const bcrypt = require('bcryptjs'); const valid = await bcrypt.compare(currentPassword, user.password); if (!valid) return res.status(401).json({ error: 'Current password incorrect' }); const hashed = await bcrypt.hash(newPassword, 10); user.password = hashed; fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2)); res.json({ success: true }); } catch { res.status(500).json({ error: 'Password change failed' }); } });
 
 
-// ═══════════════════════════════════════════════════════════════
-// V4.0 — ПОДПИСКИ VLESS И ТЮНИНГ
-// ═══════════════════════════════════════════════════════════════
+// в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
+// V4.0 вЂ” РџРћР”РџРРЎРљР VLESS Р РўР®РќРРќР“
+// в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
 
 const SUBSCRIPTIONS_FILE = path.join(__dirname, '../data/subscriptions.json');
 const TRAFFIC_FILE = path.join(__dirname, '../data/traffic.json');
 
-// Генерация токена подписки
+// Р“РµРЅРµСЂР°С†РёСЏ С‚РѕРєРµРЅР° РїРѕРґРїРёСЃРєРё
 function generateSubToken() {
   return crypto.randomBytes(16).toString('hex');
 }
 
-// Загрузка подписок
+// Р—Р°РіСЂСѓР·РєР° РїРѕРґРїРёСЃРѕРє
 function loadSubscriptions() {
   if (!fs.existsSync(SUBSCRIPTIONS_FILE)) return [];
   try { return JSON.parse(fs.readFileSync(SUBSCRIPTIONS_FILE, 'utf8')); } catch { return []; }
 }
 
-// Сохранение подписок
+// РЎРѕС…СЂР°РЅРµРЅРёРµ РїРѕРґРїРёСЃРѕРє
 function saveSubscriptions(subs) {
   fs.writeFileSync(SUBSCRIPTIONS_FILE, JSON.stringify(subs, null, 2));
 }
 
-// Загрузка трафика
+// Р—Р°РіСЂСѓР·РєР° С‚СЂР°С„РёРєР°
 function loadTraffic() {
   if (!fs.existsSync(TRAFFIC_FILE)) return {};
   try { return JSON.parse(fs.readFileSync(TRAFFIC_FILE, 'utf8')); } catch { return {}; }
 }
 
-// Сохранение трафика
+// РЎРѕС…СЂР°РЅРµРЅРёРµ С‚СЂР°С„РёРєР°
 function saveTraffic(traffic) {
   fs.writeFileSync(TRAFFIC_FILE, JSON.stringify(traffic, null, 2));
 }
 
-// Генерация VLESS ссылки
+// Р“РµРЅРµСЂР°С†РёСЏ VLESS СЃСЃС‹Р»РєРё
 function buildVlessLink(user, config) {
   const port = Number(config.vlessPort) || 443;
   const encodedName = encodeURIComponent(user.username || 'vless-user');
@@ -1802,7 +1690,7 @@ function buildVlessLink(user, config) {
   return `vless://${user.password}@${host}:${port}?encryption=none&security=tls&type=ws&host=${host}&sni=${host}&path=${wsPath}#${encodedName}`;
 }
 
-// Генерация подписки в формате для приложений
+// Р“РµРЅРµСЂР°С†РёСЏ РїРѕРґРїРёСЃРєРё РІ С„РѕСЂРјР°С‚Рµ РґР»СЏ РїСЂРёР»РѕР¶РµРЅРёР№
 function generateSubscriptionContent(token, config) {
   const subs = loadSubscriptions();
   const sub = subs.find(s => s.token === token);
@@ -1818,7 +1706,7 @@ function generateSubscriptionContent(token, config) {
   return links.join('\n');
 }
 
-// API: Список подписок
+// API: РЎРїРёСЃРѕРє РїРѕРґРїРёСЃРѕРє
 app.get('/api/subscriptions', requireAuth, (req, res) => {
   const subs = loadSubscriptions();
   res.json(subs.map(s => ({
@@ -1835,7 +1723,7 @@ app.get('/api/subscriptions', requireAuth, (req, res) => {
   })));
 });
 
-// API: Создание подписки
+// API: РЎРѕР·РґР°РЅРёРµ РїРѕРґРїРёСЃРєРё
 app.post('/api/subscriptions', requireAuth, (req, res) => {
   try {
     const { username, expiresDays, trafficLimit } = req.body;
@@ -1889,7 +1777,7 @@ app.post('/api/subscriptions', requireAuth, (req, res) => {
   }
 });
 
-// API: Удаление подписки
+// API: РЈРґР°Р»РµРЅРёРµ РїРѕРґРїРёСЃРєРё
 app.delete('/api/subscriptions/:id', requireAuth, (req, res) => {
   try {
     const subs = loadSubscriptions();
@@ -1901,7 +1789,7 @@ app.delete('/api/subscriptions/:id', requireAuth, (req, res) => {
   }
 });
 
-// API: Продление подписки
+// API: РџСЂРѕРґР»РµРЅРёРµ РїРѕРґРїРёСЃРєРё
 app.post('/api/subscriptions/:id/renew', requireAuth, (req, res) => {
   try {
     const { days } = req.body;
@@ -1917,7 +1805,7 @@ app.post('/api/subscriptions/:id/renew', requireAuth, (req, res) => {
   }
 });
 
-// ПУБЛИЧНЫЙ API: Получение подписки (для клиентских приложений)
+// РџРЈР‘Р›РР§РќР«Р™ API: РџРѕР»СѓС‡РµРЅРёРµ РїРѕРґРїРёСЃРєРё (РґР»СЏ РєР»РёРµРЅС‚СЃРєРёС… РїСЂРёР»РѕР¶РµРЅРёР№)
 app.get('/sub/:token', (req, res) => {
   try {
     const config = loadConfig();
@@ -1927,7 +1815,7 @@ app.get('/sub/:token', (req, res) => {
       return res.status(403).send('# Subscription expired or blocked');
     }
     
-    // Учёт трафика
+    // РЈС‡С‘С‚ С‚СЂР°С„РёРєР°
     const traffic = loadTraffic();
     traffic[req.params.token] = (traffic[req.params.token] || 0) + 1;
     saveTraffic(traffic);
@@ -1942,7 +1830,7 @@ app.get('/sub/:token', (req, res) => {
   }
 });
 
-// API: Статистика трафика
+// API: РЎС‚Р°С‚РёСЃС‚РёРєР° С‚СЂР°С„РёРєР°
 app.get('/api/traffic/:token', requireAuth, (req, res) => {
   try {
     const traffic = loadTraffic();
@@ -1960,26 +1848,26 @@ app.get('/api/traffic/:token', requireAuth, (req, res) => {
 });
 
 
-// ═══════════════════════════════════════════════════════════════
-// V6.0 — SNI WHITELIST (Белые списки доменов)
-// ═══════════════════════════════════════════════════════════════
+// в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
+// V6.0 вЂ” SNI WHITELIST (Р‘РµР»С‹Рµ СЃРїРёСЃРєРё РґРѕРјРµРЅРѕРІ)
+// в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
 
 const SNI_FILE = path.join(__dirname, '../data/sni-whitelist.json');
 const SNI_SEARCH_LOG = path.join(__dirname, '../data/sni-search-log.json');
 
-// Загрузка SNI whitelist
+// Р—Р°РіСЂСѓР·РєР° SNI whitelist
 function loadSNIWhitelist() {
   if (!fs.existsSync(SNI_FILE)) return { domains: [], enabled: false, lastUpdated: null };
   try { return JSON.parse(fs.readFileSync(SNI_FILE, 'utf8')); } catch { return { domains: [], enabled: false, lastUpdated: null }; }
 }
 
-// Сохранение SNI whitelist
+// РЎРѕС…СЂР°РЅРµРЅРёРµ SNI whitelist
 function saveSNIWhitelist(data) {
   data.lastUpdated = new Date().toISOString();
   fs.writeFileSync(SNI_FILE, JSON.stringify(data, null, 2));
 }
 
-// Загрузка лога поиска
+// Р—Р°РіСЂСѓР·РєР° Р»РѕРіР° РїРѕРёСЃРєР°
 function loadSNISearchLog() {
   if (!fs.existsSync(SNI_SEARCH_LOG)) return [];
   try { return JSON.parse(fs.readFileSync(SNI_SEARCH_LOG, 'utf8')); } catch { return []; }
@@ -1989,7 +1877,7 @@ function saveSNISearchLog(log) {
   fs.writeFileSync(SNI_SEARCH_LOG, JSON.stringify(log.slice(-500), null, 2));
 }
 
-// Обновление Xray config с SNI whitelist
+// РћР±РЅРѕРІР»РµРЅРёРµ Xray config СЃ SNI whitelist
 function updateXraySNI(whitelist) {
   try {
     const xrayConfig = '/usr/local/etc/xray/config.json';
@@ -1997,7 +1885,7 @@ function updateXraySNI(whitelist) {
     
     const config = JSON.parse(fs.readFileSync(xrayConfig, 'utf8'));
     
-    // Добавляем SNI в realitySettings.serverNames
+    // Р”РѕР±Р°РІР»СЏРµРј SNI РІ realitySettings.serverNames
     if (config.inbounds && config.inbounds[0] && config.inbounds[0].streamSettings && config.inbounds[0].streamSettings.realitySettings) {
       const reality = config.inbounds[0].streamSettings.realitySettings;
       const existing = new Set(reality.serverNames || []);
@@ -2016,7 +1904,7 @@ function updateXraySNI(whitelist) {
   return false;
 }
 
-// API: Получить SNI whitelist
+// API: РџРѕР»СѓС‡РёС‚СЊ SNI whitelist
 app.get('/api/sni-whitelist', requireAuth, (req, res) => {
   try {
     const data = loadSNIWhitelist();
@@ -2026,7 +1914,7 @@ app.get('/api/sni-whitelist', requireAuth, (req, res) => {
   }
 });
 
-// API: Добавить домен в whitelist
+// API: Р”РѕР±Р°РІРёС‚СЊ РґРѕРјРµРЅ РІ whitelist
 app.post('/api/sni-whitelist', requireAuth, (req, res) => {
   try {
     const { domain } = req.body;
@@ -2053,7 +1941,7 @@ app.post('/api/sni-whitelist', requireAuth, (req, res) => {
   }
 });
 
-// API: Удалить домен из whitelist
+// API: РЈРґР°Р»РёС‚СЊ РґРѕРјРµРЅ РёР· whitelist
 app.delete('/api/sni-whitelist', requireAuth, (req, res) => {
   try {
     const { domain } = req.body;
@@ -2067,7 +1955,7 @@ app.delete('/api/sni-whitelist', requireAuth, (req, res) => {
   }
 });
 
-// API: Включить/выключить SNI whitelist
+// API: Р’РєР»СЋС‡РёС‚СЊ/РІС‹РєР»СЋС‡РёС‚СЊ SNI whitelist
 app.post('/api/sni-whitelist/toggle', requireAuth, (req, res) => {
   try {
     const { enabled } = req.body;
@@ -2080,7 +1968,7 @@ app.post('/api/sni-whitelist/toggle', requireAuth, (req, res) => {
   }
 });
 
-// API: Поиск домена (проверка доступности)
+// API: РџРѕРёСЃРє РґРѕРјРµРЅР° (РїСЂРѕРІРµСЂРєР° РґРѕСЃС‚СѓРїРЅРѕСЃС‚Рё)
 app.post('/api/sni-whitelist/search', requireAuth, async (req, res) => {
   try {
     const { query } = req.body;
@@ -2088,7 +1976,7 @@ app.post('/api/sni-whitelist/search', requireAuth, async (req, res) => {
     
     const cleanQuery = query.toLowerCase().trim().replace(/^https?:\/\//, '').replace(/\/.*$/, '');
     
-    // Проверяем DNS
+    // РџСЂРѕРІРµСЂСЏРµРј DNS
     const { exec } = require('child_process');
     const dnsCheck = new Promise((resolve) => {
       exec(`dig +short ${cleanQuery} 2>/dev/null | head -1`, { timeout: 5000 }, (err, stdout) => {
@@ -2096,7 +1984,7 @@ app.post('/api/sni-whitelist/search', requireAuth, async (req, res) => {
       });
     });
     
-    // Проверяем HTTP
+    // РџСЂРѕРІРµСЂСЏРµРј HTTP
     const httpCheck = new Promise((resolve) => {
       exec(`curl -sI --connect-timeout 5 -m 10 "https://${cleanQuery}" 2>/dev/null | head -1`, { timeout: 10000 }, (err, stdout) => {
         resolve(stdout.trim());
@@ -2114,7 +2002,7 @@ app.post('/api/sni-whitelist/search', requireAuth, async (req, res) => {
       timestamp: new Date().toISOString()
     };
     
-    // Сохраняем в лог
+    // РЎРѕС…СЂР°РЅСЏРµРј РІ Р»РѕРі
     const log = loadSNISearchLog();
     log.push(result);
     saveSNISearchLog(log);
@@ -2125,7 +2013,7 @@ app.post('/api/sni-whitelist/search', requireAuth, async (req, res) => {
   }
 });
 
-// API: Лог поиска
+// API: Р›РѕРі РїРѕРёСЃРєР°
 app.get('/api/sni-whitelist/search-log', requireAuth, (req, res) => {
   try {
     const log = loadSNISearchLog();
@@ -2135,7 +2023,7 @@ app.get('/api/sni-whitelist/search-log', requireAuth, (req, res) => {
   }
 });
 
-// API: Популярные SNI (предустановленные)
+// API: РџРѕРїСѓР»СЏСЂРЅС‹Рµ SNI (РїСЂРµРґСѓСЃС‚Р°РЅРѕРІР»РµРЅРЅС‹Рµ)
 app.get('/api/sni-whitelist/presets', requireAuth, (req, res) => {
   res.json([
     { domain: 'www.cloudflare.com', category: 'CDN' },
@@ -2151,5 +2039,20 @@ app.get('/api/sni-whitelist/presets', requireAuth, (req, res) => {
     { domain: 'www.netflix.com', category: 'Video' },
     { domain: 'www.spotify.com', category: 'Music' }
   ]);
+});
+
+// в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
+//  SPA CATCH-ALL (РѕС‚РґР°С‘С‚ index.html РґР»СЏ РІСЃРµС… РЅРµ-API Р·Р°РїСЂРѕСЃРѕРІ)
+// в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/index.html'));
+});
+
+// в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
+//  START SERVER
+// в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
+server.listen(PORT, '0.0.0.0', () => {
+  console.log(`NaiveProxy Panel running on port ${PORT}`);
+  restartDiscordMonitor();
 });
 

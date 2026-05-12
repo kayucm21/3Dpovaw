@@ -1,5 +1,16 @@
 ﻿# CHANGELOG - NaiveProxy Panel
 
+## 2026-05-12 11:24:19 UTC - 312246fd
+
+- Author: kayucm21
+- Message: fix: remove unused node-pty dependency (speeds up install 10x)
+- Commit: https://github.com/kayucm21/3Dpovaw/commit/312246fdb9db1e12e446a93cfd6c9e58cf85e323
+
+### Changed files
+
+- `panel/package.json`
+
+
 ## 2026-05-12 11:03:08 UTC - 5c559cd6
 
 - Author: kayucm21

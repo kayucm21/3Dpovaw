@@ -1,5 +1,16 @@
 ﻿# CHANGELOG - NaiveProxy Panel
 
+## 2026-05-12 12:50:37 UTC - 093d511a
+
+- Author: kayucm21
+- Message: fix: add missing ssh2 dependency
+- Commit: https://github.com/kayucm21/3Dpovaw/commit/093d511a3ea31e737026f7f46424a6b5ae743093
+
+### Changed files
+
+- `panel/package.json`
+
+
 ## 2026-05-12 11:25:33 UTC - 480a11dc
 
 - Author: kayucm21

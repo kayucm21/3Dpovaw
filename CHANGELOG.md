@@ -1,5 +1,16 @@
 ﻿# CHANGELOG - NaiveProxy Panel
 
+## 2026-05-12 11:00:42 UTC - 91063438
+
+- Author: kayucm21
+- Message: fix: add build-tools for node-pty, validate npm install
+- Commit: https://github.com/kayucm21/3Dpovaw/commit/91063438120c92473b0172ff15a847852dbe67e0
+
+### Changed files
+
+- `install.sh`
+
+
 ## 2026-05-12 09:43:17 UTC - 7ab467b8
 
 - Author: kayucm21
